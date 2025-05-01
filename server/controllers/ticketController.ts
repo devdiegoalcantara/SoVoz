@@ -22,7 +22,7 @@ export const getAllTickets = async (req: Request, res: Response) => {
         tickets = await storage.getTicketsByUser(userId);
       }
       console.log('Tickets encontrados:', tickets);
-      res.json({ tickets });
+      res.json({ tickets: tickets || [] });
     } catch (error) {
       console.error('Erro ao buscar tickets:', error);
       res.status(500).json({ message: 'Erro ao buscar tickets', error: error.message });

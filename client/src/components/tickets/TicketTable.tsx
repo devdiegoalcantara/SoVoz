@@ -39,7 +39,8 @@ export default function TicketTable() {
       if (!response.ok) {
         throw new Error('Erro ao carregar tickets');
       }
-      return response.json();
+      const result = await response.json();
+      return { tickets: result.tickets || [] };
     }
   });
 
