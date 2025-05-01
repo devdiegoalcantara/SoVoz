@@ -1,0 +1,156 @@
+import { Request, Response } from 'express';
+import { storage } from '../storage';
+import { insertTicketSchema } from '@shared/schema';
+
+// Get all tickets
+export const getAllTickets = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - Added by auth middleware
+    const userRole = req.user?.role;
+
+    // Regular users can only see their own tickets
+    if (userRole === 'user') {
+      // @ts-ignore - Added by auth middleware
+      const userId = req.user?.id;
+      const tickets = await storage.getTicketsByUser(userId);
+      return res.json({ tickets });
+    }
+
+    // Admins can see all tickets
+    const tickets = await storage.getAllTickets();
+    res.json({ tickets });
+  } catch (error) {
+    console.error('Get all tickets error:', error);
+    res.status(500).json({ message: 'Server error retrieving tickets' });
+  }
+};
+
+// Get ticket by ID
+export const getTicketById = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id);
+    const ticket = await storage.getTicket(ticketId);
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // @ts-ignore - Added by auth middleware
+    const userRole = req.user?.role;
+    // @ts-ignore - Added by auth middleware
+    const userId = req.user?.id;
+
+    // Regular users can only see their own tickets
+    if (userRole === 'user' && ticket.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.json({ ticket });
+  } catch (error) {
+    console.error('Get ticket by ID error:', error);
+    res.status(500).json({ message: 'Server error retrieving ticket' });
+  }
+};
+
+// Create a new ticket
+export const createTicket = async (req: Request, res: Response) => {
+  try {
+    let attachmentPath = null;
+    if (req.file) {
+      attachmentPath = req.file.path;
+    }
+
+    // Get user ID if authenticated
+    // @ts-ignore - Added by auth middleware
+    const userId = req.user?.id;
+
+    // Validate request body
+    const validationResult = insertTicketSchema.safeParse({
+      ...req.body,
+      userId: userId || null,
+      attachmentPath
+    });
+
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: validationResult.error.format() 
+      });
+    }
+
+    const ticketData = {
+      title: req.body.title,
+      description: req.body.description,
+      type: req.body.type,
+      department: req.body.department,
+      status: 'Novo',
+      submitterName: req.body.submitterName || null,
+      submitterEmail: req.body.submitterEmail || null,
+      userId: userId || null,
+      attachmentPath: attachmentPath || null
+    };
+
+    const newTicket = await storage.createTicket(ticketData);
+
+    res.status(201).json({
+      message: 'Ticket created successfully',
+      ticket: newTicket
+    });
+  } catch (error) {
+    console.error('Create ticket error:', error);
+    res.status(500).json({ message: 'Server error creating ticket' });
+  }
+};
+
+// Update ticket status
+export const updateTicketStatus = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!status || !['Novo', 'Em andamento', 'Resolvido'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const updatedTicket = await storage.updateTicketStatus(ticketId, status);
+
+    if (!updatedTicket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    res.json({
+      message: 'Ticket status updated successfully',
+      ticket: updatedTicket
+    });
+  } catch (error) {
+    console.error('Update ticket status error:', error);
+    res.status(500).json({ message: 'Server error updating ticket status' });
+  }
+};
+
+// Get ticket statistics
+export const getTicketStatistics = async (_req: Request, res: Response) => {
+  try {
+    const [typeStats, statusStats, departmentStats] = await Promise.all([
+      storage.getTicketCountByType(),
+      storage.getTicketCountByStatus(),
+      storage.getMostCitedDepartments()
+    ]);
+
+    const totalTickets = statusStats.reduce((sum, stat) => sum + stat.count, 0);
+    const resolvedTickets = statusStats.find(stat => stat.status === 'Resolvido')?.count || 0;
+    const resolvedPercentage = totalTickets > 0 ? Math.round((resolvedTickets / totalTickets) * 100) : 0;
+
+    res.json({
+      totalTickets,
+      resolvedTickets,
+      resolvedPercentage,
+      typeStats,
+      statusStats,
+      departmentStats
+    });
+  } catch (error) {
+    console.error('Get ticket statistics error:', error);
+    res.status(500).json({ message: 'Server error retrieving ticket statistics' });
+  }
+};
