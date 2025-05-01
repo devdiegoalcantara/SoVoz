@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { storage } from '../storage';
-import { insertTicketSchema } from '@shared/schema';
+import { storage } from '../mongo-storage';
+import { InsertTicket } from '../mongo-storage';
 
 // Get all tickets
 export const getAllTickets = async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { storage } from '../storage';
+import { storage } from '../mongo-storage';
 
 // JWT secret key
 const JWT_SECRET = process.env.JWT_SECRET || 'sovoz-secret-key';
@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sovoz-secret-key';
 // Interface for extended request with user
 interface AuthRequest extends Request {
   user?: {
-    id: number;
+    id: string; // Mudado para string (MongoDB usa _id como string)
     email: string;
     role: string;
   };
@@ -23,7 +23,7 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
       return res.status(401).json({ message: 'No token provided, access denied' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string; role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: string };
     const user = await storage.getUser(decoded.id);
 
     if (!user) {
