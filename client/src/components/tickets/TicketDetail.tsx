@@ -20,14 +20,9 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
   const { isAdmin } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<string>("");
 
-  // Use o ID original sem conversão
+  // Fetch ticket details using the original ID
   const { data, isLoading, error } = useQuery<{ ticket: any }>({
     queryKey: [`/api/tickets/${ticketId}`],
-  });
-
-  // Fetch ticket details
-  const { data, isLoading, error } = useQuery<{ ticket: any }>({
-    queryKey: [`/api/tickets/${id}`],
   });
 
   // Update ticket status mutation
