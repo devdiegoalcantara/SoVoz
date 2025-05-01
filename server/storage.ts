@@ -1,4 +1,5 @@
-import { users, tickets, type User, type InsertUser, type Ticket, type InsertTicket } from "@shared/schema";
+import { users, tickets } from "@shared/schema";
+import { type User, type InsertUser, type Ticket, type InsertTicket } from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -32,18 +33,18 @@ export class DatabaseStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db
-      .insert(schema.users)
+      .insert(users)
       .values(userData)
       .returning();
     return user;
@@ -51,29 +52,29 @@ export class DatabaseStorage implements IStorage {
 
   // Ticket operations
   async getTicket(id: number): Promise<Ticket | undefined> {
-    const [ticket] = await db.select().from(schema.tickets).where(eq(schema.tickets.id, id));
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
     return ticket;
   }
 
   async getAllTickets(): Promise<Ticket[]> {
-    return db.select().from(schema.tickets).orderBy(desc(schema.tickets.createdAt));
+    return db.select().from(tickets).orderBy(desc(tickets.createdAt));
   }
 
   async getTicketsByUser(userId: number): Promise<Ticket[]> {
-    return db.select().from(schema.tickets).where(eq(schema.tickets.userId, userId));
+    return db.select().from(tickets).where(eq(tickets.userId, userId));
   }
 
   async getTicketsByStatus(status: string): Promise<Ticket[]> {
-    return db.select().from(schema.tickets).where(eq(schema.tickets.status, status));
+    return db.select().from(tickets).where(eq(tickets.status, status));
   }
 
   async getTicketsByType(type: string): Promise<Ticket[]> {
-    return db.select().from(schema.tickets).where(eq(schema.tickets.type, type));
+    return db.select().from(tickets).where(eq(tickets.type, type));
   }
 
   async createTicket(ticketData: InsertTicket): Promise<Ticket> {
     const [ticket] = await db
-      .insert(schema.tickets)
+      .insert(tickets)
       .values({
         ...ticketData,
         createdAt: new Date()
@@ -84,9 +85,9 @@ export class DatabaseStorage implements IStorage {
 
   async updateTicketStatus(id: number, status: string): Promise<Ticket | undefined> {
     const [updatedTicket] = await db
-      .update(schema.tickets)
+      .update(tickets)
       .set({ status })
-      .where(eq(schema.tickets.id, id))
+      .where(eq(tickets.id, id))
       .returning();
     return updatedTicket;
   }
@@ -95,11 +96,11 @@ export class DatabaseStorage implements IStorage {
   async getTicketCountByType(): Promise<{ type: string; count: number }[]> {
     const result = await db
       .select({
-        type: schema.tickets.type,
+        type: tickets.type,
         count: sql<number>`count(*)::int`,
       })
-      .from(schema.tickets)
-      .groupBy(schema.tickets.type);
+      .from(tickets)
+      .groupBy(tickets.type);
     
     return result;
   }
@@ -107,11 +108,11 @@ export class DatabaseStorage implements IStorage {
   async getTicketCountByStatus(): Promise<{ status: string; count: number }[]> {
     const result = await db
       .select({
-        status: schema.tickets.status,
+        status: tickets.status,
         count: sql<number>`count(*)::int`,
       })
-      .from(schema.tickets)
-      .groupBy(schema.tickets.status);
+      .from(tickets)
+      .groupBy(tickets.status);
     
     return result;
   }
@@ -119,11 +120,11 @@ export class DatabaseStorage implements IStorage {
   async getMostCitedDepartments(): Promise<{ department: string; count: number }[]> {
     const result = await db
       .select({
-        department: schema.tickets.department,
+        department: tickets.department,
         count: sql<number>`count(*)::int`,
       })
-      .from(schema.tickets)
-      .groupBy(schema.tickets.department)
+      .from(tickets)
+      .groupBy(tickets.department)
       .orderBy(desc(sql<number>`count(*)`))
       .limit(6);
     

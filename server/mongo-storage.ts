@@ -1,7 +1,8 @@
 import { Types } from 'mongoose';
 import { UserModel, TicketModel, connectToDatabase, isConnected } from './mongodb';
 import bcrypt from 'bcryptjs';
-import { storage as memStorage } from './storage';
+// Import only when needed to avoid circular dependency
+let memStorage: any;
 
 // Definindo interfaces para representar os documentos do MongoDB
 export interface User {
@@ -68,6 +69,16 @@ export interface IStorage {
 
 export class MongoDBStorage implements IStorage {
   constructor() {
+    // Lazy import to avoid circular dependency
+    if (!memStorage) {
+      try {
+        const { storage } = require('./storage');
+        memStorage = storage;
+      } catch (error) {
+        console.error('Erro ao importar armazenamento em memória:', error);
+      }
+    }
+    
     // Conectar ao MongoDB quando o armazenamento for inicializado
     this.initializeDatabase();
   }
@@ -206,32 +217,46 @@ export class MongoDBStorage implements IStorage {
   }
 
   async getTicketsByUser(userId: string): Promise<Ticket[]> {
+    if (!isConnected) {
+      console.log('MongoDB não conectado, usando armazenamento em memória');
+      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
+      return memStorage.getTicketsByUser(parseInt(userId));
+    }
     try {
       const tickets = await TicketModel.find({ userId: new Types.ObjectId(userId) });
       return tickets.map(ticket => this.mapTicketDocument(ticket));
     } catch (error) {
       console.error('Erro ao buscar tickets do usuário:', error);
-      return [];
+      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
+      return memStorage.getTicketsByUser(parseInt(userId));
     }
   }
 
   async getTicketsByStatus(status: string): Promise<Ticket[]> {
+    if (!isConnected) {
+      console.log('MongoDB não conectado, usando armazenamento em memória');
+      return memStorage.getTicketsByStatus(status);
+    }
     try {
       const tickets = await TicketModel.find({ status });
       return tickets.map(ticket => this.mapTicketDocument(ticket));
     } catch (error) {
       console.error('Erro ao buscar tickets por status:', error);
-      return [];
+      return memStorage.getTicketsByStatus(status);
     }
   }
 
   async getTicketsByType(type: string): Promise<Ticket[]> {
+    if (!isConnected) {
+      console.log('MongoDB não conectado, usando armazenamento em memória');
+      return memStorage.getTicketsByType(type);
+    }
     try {
       const tickets = await TicketModel.find({ type });
       return tickets.map(ticket => this.mapTicketDocument(ticket));
     } catch (error) {
       console.error('Erro ao buscar tickets por tipo:', error);
-      return [];
+      return memStorage.getTicketsByType(type);
     }
   }
 
@@ -302,6 +327,10 @@ export class MongoDBStorage implements IStorage {
   }
 
   async getTicketCountByStatus(): Promise<{ status: string; count: number }[]> {
+    if (!isConnected) {
+      console.log('MongoDB não conectado, usando armazenamento em memória');
+      return memStorage.getTicketCountByStatus();
+    }
     try {
       const result = await TicketModel.aggregate([
         { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -311,11 +340,15 @@ export class MongoDBStorage implements IStorage {
       return result;
     } catch (error) {
       console.error('Erro ao buscar contagem de tickets por status:', error);
-      return [];
+      return memStorage.getTicketCountByStatus();
     }
   }
 
   async getMostCitedDepartments(): Promise<{ department: string; count: number }[]> {
+    if (!isConnected) {
+      console.log('MongoDB não conectado, usando armazenamento em memória');
+      return memStorage.getMostCitedDepartments();
+    }
     try {
       const result = await TicketModel.aggregate([
         { $group: { _id: "$department", count: { $sum: 1 } } },
@@ -327,7 +360,7 @@ export class MongoDBStorage implements IStorage {
       return result;
     } catch (error) {
       console.error('Erro ao buscar departamentos mais citados:', error);
-      return [];
+      return memStorage.getMostCitedDepartments();
     }
   }
 }
