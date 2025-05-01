@@ -70,8 +70,8 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 
     // Get the highest sequential ID
-    const lastTicket = await TicketModel.findOne().sort({ sequentialId: -1 });
-    const nextSequentialId = lastTicket ? lastTicket.sequentialId + 1 : 1;
+    const lastTicket = await TicketModel.findOne({}, { sequentialId: 1 }).sort({ sequentialId: -1 });
+    const nextSequentialId = (lastTicket?.sequentialId || 0) + 1;
 
     // Get user ID if authenticated
     // @ts-ignore - Added by auth middleware

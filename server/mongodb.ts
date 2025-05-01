@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
 
 // Schema de Ticket
 const ticketSchema = new mongoose.Schema({
-  sequentialId: { type: Number, unique: true },
+  sequentialId: { type: Number, unique: true, required: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
   type: { type: String, required: true },
