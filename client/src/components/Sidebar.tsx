@@ -55,26 +55,26 @@ export default function Sidebar() {
         <ul className={`${isMobile && !mobileMenuOpen ? 'hidden' : 'flex'} flex-row justify-around md:flex-col px-2`}>
           {filteredNavItems.map((item) => (
             <li key={item.href}>
-              <Link href={item.href}>
-                <a 
-                  className={`flex items-center space-x-2 py-2 px-4 rounded hover:bg-primary/20 text-center md:text-left transition ${
-                    location === item.href ? 'bg-primary/30' : ''
-                  }`}
-                >
-                  <i className={`${item.icon} w-5 md:w-auto`}></i>
-                  <span className="hidden md:inline">{item.label}</span>
-                </a>
+              <Link 
+                href={item.href}
+                className={`flex items-center space-x-2 py-2 px-4 rounded hover:bg-primary/20 text-center md:text-left transition ${
+                  location === item.href ? 'bg-primary/30' : ''
+                }`}
+              >
+                <i className={`${item.icon} w-5 md:w-auto`}></i>
+                <span className="hidden md:inline">{item.label}</span>
               </Link>
             </li>
           ))}
           <li>
-            <Link href="/new-ticket">
-              <a className={`flex items-center space-x-2 py-2 px-4 rounded hover:bg-primary/20 text-center md:text-left transition ${
+            <Link 
+              href="/new-ticket"
+              className={`flex items-center space-x-2 py-2 px-4 rounded hover:bg-primary/20 text-center md:text-left transition ${
                 location === '/new-ticket' ? 'bg-primary/30' : ''
-              }`}>
-                <i className="fas fa-plus w-5 md:w-auto"></i>
-                <span className="hidden md:inline">Novo Ticket</span>
-              </a>
+              }`}
+            >
+              <i className="fas fa-plus w-5 md:w-auto"></i>
+              <span className="hidden md:inline">Novo Ticket</span>
             </Link>
           </li>
         </ul>
