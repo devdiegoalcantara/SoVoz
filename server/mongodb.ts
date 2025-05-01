@@ -3,14 +3,26 @@ import mongoose from 'mongoose';
 // URL de conexão do MongoDB fornecida pelo usuário
 const MONGODB_URI = "mongodb+srv://devdiegoalcantara:diego58205820@cluster0.8pyyf6p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
+// Variável para rastrear o estado da conexão
+export let isConnected = false;
+
 // Conectar ao MongoDB
 export const connectToDatabase = async () => {
   try {
-    await mongoose.connect(MONGODB_URI);
+    // Adicionando opções para conexão mais rápida
+    const options = {
+      serverSelectionTimeoutMS: 5000, // Tempo limite de 5 segundos para seleção de servidor
+      connectTimeoutMS: 10000, // Tempo limite de 10 segundos para conexão
+    };
+    
+    await mongoose.connect(MONGODB_URI, options);
     console.log('Conectado ao MongoDB com sucesso!');
+    isConnected = true;
+    return true;
   } catch (error) {
     console.error('Erro ao conectar com MongoDB:', error);
-    throw error;
+    isConnected = false;
+    return false;
   }
 };
 
