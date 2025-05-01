@@ -22,7 +22,7 @@ export default function KanbanBoard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [draggedTicket, setDraggedTicket] = useState<Ticket | null>(null);
-  
+
   // Fetch tickets
   const { data, isLoading, error } = useQuery<{ tickets: Ticket[] }>({
     queryKey: ["/api/tickets"],
@@ -72,10 +72,10 @@ export default function KanbanBoard() {
   // Handle drop
   const handleDrop = async (status: string) => {
     if (!draggedTicket) return;
-    
+
     // Don't update if status is the same
     if (draggedTicket.status === status) return;
-    
+
     await updateStatusMutation.mutateAsync({
       id: draggedTicket.id,
       status,
@@ -118,7 +118,7 @@ export default function KanbanBoard() {
         <h1 className="text-xl font-bold text-text">Kanban</h1>
         <p className="text-gray-500 text-sm">Visualize e gerencie os tickets de forma visual</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Novo */}
         <div 
@@ -138,9 +138,9 @@ export default function KanbanBoard() {
               </span>
             </h3>
           </div>
-          
+
           <div className="p-4 space-y-4 min-h-[200px]">
-            {newTickets.map((ticket) => (
+            {newTickets.map((ticket, index) => (
               <div 
                 key={ticket.id}
                 className="bg-cardBg p-3 rounded-md border border-gray-200 shadow-sm cursor-move hover:shadow-md transition"
@@ -150,7 +150,7 @@ export default function KanbanBoard() {
                 onClick={() => handleTicketClick(ticket.id)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-medium text-gray-500">#{ticket.id}</span>
+                  <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     ticket.type === "Bug" ? "bg-red-100 text-red-800" :
                     ticket.type === "Sugestão" ? "bg-blue-100 text-blue-800" :
@@ -171,7 +171,7 @@ export default function KanbanBoard() {
                 </div>
               </div>
             ))}
-            
+
             {newTickets.length === 0 && (
               <div className="text-center p-4 text-gray-400">
                 <p>Nenhum ticket novo</p>
@@ -179,7 +179,7 @@ export default function KanbanBoard() {
             )}
           </div>
         </div>
-        
+
         {/* Em andamento */}
         <div 
           className="bg-white rounded-lg shadow-sm"
@@ -198,9 +198,9 @@ export default function KanbanBoard() {
               </span>
             </h3>
           </div>
-          
+
           <div className="p-4 space-y-4 min-h-[200px]">
-            {inProgressTickets.map((ticket) => (
+            {inProgressTickets.map((ticket, index) => (
               <div 
                 key={ticket.id}
                 className="bg-cardBg p-3 rounded-md border border-gray-200 shadow-sm cursor-move hover:shadow-md transition"
@@ -210,7 +210,7 @@ export default function KanbanBoard() {
                 onClick={() => handleTicketClick(ticket.id)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-medium text-gray-500">#{ticket.id}</span>
+                  <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     ticket.type === "Bug" ? "bg-red-100 text-red-800" :
                     ticket.type === "Sugestão" ? "bg-blue-100 text-blue-800" :
@@ -231,7 +231,7 @@ export default function KanbanBoard() {
                 </div>
               </div>
             ))}
-            
+
             {inProgressTickets.length === 0 && (
               <div className="text-center p-4 text-gray-400">
                 <p>Nenhum ticket em andamento</p>
@@ -239,7 +239,7 @@ export default function KanbanBoard() {
             )}
           </div>
         </div>
-        
+
         {/* Resolvido */}
         <div 
           className="bg-white rounded-lg shadow-sm"
@@ -258,9 +258,9 @@ export default function KanbanBoard() {
               </span>
             </h3>
           </div>
-          
+
           <div className="p-4 space-y-4 min-h-[200px]">
-            {resolvedTickets.map((ticket) => (
+            {resolvedTickets.map((ticket, index) => (
               <div 
                 key={ticket.id}
                 className="bg-cardBg p-3 rounded-md border border-gray-200 shadow-sm cursor-move hover:shadow-md transition"
@@ -270,7 +270,7 @@ export default function KanbanBoard() {
                 onClick={() => handleTicketClick(ticket.id)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-medium text-gray-500">#{ticket.id}</span>
+                  <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     ticket.type === "Bug" ? "bg-red-100 text-red-800" :
                     ticket.type === "Sugestão" ? "bg-blue-100 text-blue-800" :
@@ -291,7 +291,7 @@ export default function KanbanBoard() {
                 </div>
               </div>
             ))}
-            
+
             {resolvedTickets.length === 0 && (
               <div className="text-center p-4 text-gray-400">
                 <p>Nenhum ticket resolvido</p>

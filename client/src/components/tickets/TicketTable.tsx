@@ -10,6 +10,7 @@ type Ticket = {
   department: string;
   status: string;
   createdAt: string;
+  sequentialId?: number; // Added sequentialId field
 };
 
 type FilterOptions = {
@@ -52,7 +53,7 @@ export default function TicketTable() {
       ? ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ticket.department.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
-    
+
     return matchesType && matchesStatus && matchesSearch;
   }) || [];
 
@@ -140,7 +141,7 @@ export default function TicketTable() {
           <h1 className="text-xl font-bold text-text">Lista de Tickets</h1>
           <p className="text-gray-500 text-sm">Gerencie os tickets enviados pelos usuários</p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <div className="relative">
             <select
@@ -155,7 +156,7 @@ export default function TicketTable() {
             </select>
             <i className="fas fa-chevron-down absolute right-3 top-2 text-gray-400 pointer-events-none"></i>
           </div>
-          
+
           <div className="relative">
             <select
               className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
@@ -171,13 +172,13 @@ export default function TicketTable() {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Sequencial</th> {/*Updated header*/}
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Órgão</th>
@@ -189,10 +190,12 @@ export default function TicketTable() {
             <tbody className="bg-white divide-y divide-gray-200">
               {displayedTickets.map((ticket) => {
                 const typeBadge = getTypeBadge(ticket.type);
-                
+
                 return (
                   <tr key={ticket.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{ticket.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {ticket.sequentialId ? `#${ticket.sequentialId}` : `#${startIndex + displayedTickets.indexOf(ticket) + 1}`} {/* Display sequential ID if available */}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ticket.title}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeBadge.bgColor} ${typeBadge.textColor}`}>
@@ -226,7 +229,7 @@ export default function TicketTable() {
                   </tr>
                 );
               })}
-              
+
               {displayedTickets.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
@@ -237,7 +240,7 @@ export default function TicketTable() {
             </tbody>
           </table>
         </div>
-        
+
         {totalPages > 1 && (
           <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
             <p className="text-sm text-gray-700">
@@ -255,7 +258,7 @@ export default function TicketTable() {
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              
+
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = i + 1;
                 return (
@@ -272,7 +275,7 @@ export default function TicketTable() {
                   </button>
                 );
               })}
-              
+
               <button
                 className={`px-3 py-1 rounded-md border border-gray-300 text-sm font-medium ${
                   currentPage === totalPages
