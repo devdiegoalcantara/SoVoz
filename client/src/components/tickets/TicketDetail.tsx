@@ -23,16 +23,12 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
   // Fetch ticket details using the original ID
   const { data, isLoading, error } = useQuery<{ ticket: any }>({
     queryKey: [`/api/tickets/${ticketId}`],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/tickets/${ticketId}`);
-      return response.json();
-    }
   });
 
   // Update ticket status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status }: { status: string }) => {
-      const response = await apiRequest("PATCH", `/api/tickets/${ticketId}/status`, { status });
+      const response = await apiRequest("PATCH", `/api/tickets/${id}/status`, { status });
       return response.json();
     },
     onSuccess: () => {
