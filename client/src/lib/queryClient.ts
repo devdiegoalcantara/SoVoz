@@ -55,3 +55,17 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// The following code would be relevant if authentication were handled via a token in localStorage instead of cookies.
+// export const apiRequest = async (method: string, path: string, body?: any) => {
+//   const token = localStorage.getItem('token');
+//   const response = await fetch(`/api${path}`, {
+//     method,
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': token ? `Bearer ${token}` : '',
+//     },
+//     body: body ? JSON.stringify(body) : undefined,
+//   });
+//   return response;
+// };

@@ -15,7 +15,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ token: string; user: User } | null>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -75,13 +75,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login bem-sucedido",
         description: "Você está conectado agora.",
       });
-      
+
       // Redirect based on user role
       if (data.user.role === 'admin') {
         setLocation("/dashboard");
       } else {
         setLocation("/tickets");
       }
+      return data;
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -89,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Email ou senha inválidos.",
         variant: "destructive",
       });
+      return null;
     }
   };
 
@@ -129,6 +131,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const apiRequestWithAuth = async (method: string, url: string, body?: any) => {
+    const authToken = localStorage.getItem('token');
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    return apiRequest(method, url, body, headers);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,7 +146,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin: user?.role === "admin",
         login,
         register,
-        logout
+        logout,
+        apiRequestWithAuth
       }}
     >
       {!loading && children}
