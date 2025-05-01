@@ -68,6 +68,10 @@ export const createTicket = async (req: Request, res: Response) => {
       attachmentPath = req.file.path;
     }
 
+    // Get the highest sequential ID
+    const lastTicket = await TicketModel.findOne().sort({ sequentialId: -1 });
+    const nextSequentialId = lastTicket ? lastTicket.sequentialId + 1 : 1;
+
     // Get user ID if authenticated
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
@@ -82,6 +86,7 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 
     const ticketData = {
+      sequentialId: nextSequentialId,
       title: req.body.title,
       description: req.body.description,
       type: req.body.type,
