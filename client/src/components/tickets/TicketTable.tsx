@@ -192,7 +192,7 @@ export default function TicketTable() {
                 
                 return (
                   <tr key={ticket.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{ticket.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{startIndex + displayedTickets.indexOf(ticket) + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ticket.title}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeBadge.bgColor} ${typeBadge.textColor}`}>
