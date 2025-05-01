@@ -74,7 +74,7 @@ export const createTicket = async (req: Request, res: Response) => {
 
     // Validação básica
     const { title, description, type, department } = req.body;
-    
+
     if (!title || !description || !type || !department) {
       return res.status(400).json({ 
         message: 'Os campos título, descrição, tipo e departamento são obrigatórios' 

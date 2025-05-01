@@ -28,8 +28,19 @@ export default function TicketTable() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch tickets
-  const { data, isLoading, error } = useQuery<{ tickets: Ticket[] }>({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["/api/tickets"],
+    queryFn: async () => {
+      const response = await fetch("/api/tickets", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao carregar tickets');
+      }
+      return response.json();
+    }
   });
 
   // Filter and search tickets
