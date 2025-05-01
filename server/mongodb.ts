@@ -26,10 +26,13 @@ export const connectToDatabase = async () => {
     }
 
     const options = {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      family: 4
+      family: 4,
+      maxPoolSize: 10,
+      retryWrites: true,
+      retryReads: true
     };
     
     const db = await mongoose.connect(MONGODB_URI, options);

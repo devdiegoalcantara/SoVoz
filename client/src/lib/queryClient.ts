@@ -1,37 +1,38 @@
-
 import { QueryClient } from "@tanstack/react-query";
 
 export const apiRequest = async (
   method: string,
   url: string,
-  body?: any,
-  additionalHeaders: Record<string, string> = {}
-) => {
+  body?: any
+): Promise<any> => {
   const token = localStorage.getItem("token");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...additionalHeaders,
   };
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const baseUrl = "/api";
-  const fullUrl = url.startsWith("/api") ? url : `${baseUrl}${url}`;
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: 'include'
+    });
 
-  const response = await fetch(fullUrl, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(data.message || `Erro na requisição: ${response.status}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('API Error:', error);
+    throw new Error(error.message || 'Erro ao conectar com o servidor');
   }
-
-  return response.json();
 };
 
 export const queryClient = new QueryClient({
