@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 
-// URL de conexão do MongoDB fornecida pelo usuário
-const MONGODB_URI = "mongodb+srv://devdiegoalcantara:diego58205820@cluster0.8pyyf6p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// URL de conexão do MongoDB via variável de ambiente
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI não configurado nas variáveis de ambiente');
+}
 
 // Variável para rastrear o estado da conexão
 export let isConnected = false;
