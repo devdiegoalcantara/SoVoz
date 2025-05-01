@@ -17,17 +17,21 @@ export const apiRequest = async (
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
+  const baseUrl = "/api";
+  const fullUrl = url.startsWith("/api") ? url : `${baseUrl}${url}`;
+
+  const response = await fetch(fullUrl, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    credentials: "include",
   });
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  return response;
+  return response.json();
 };
 
 export const queryClient = new QueryClient({

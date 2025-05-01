@@ -15,13 +15,18 @@ export const getAllTickets = async (req: Request, res: Response) => {
     }
 
     let tickets = [];
-    if (userRole === 'admin') {
-      tickets = await storage.getAllTickets();
-    } else if (userId) {
-      tickets = await storage.getTicketsByUser(userId);
+    try {
+      if (userRole === 'admin') {
+        tickets = await storage.getAllTickets();
+      } else if (userId) {
+        tickets = await storage.getTicketsByUser(userId);
+      }
+      console.log('Tickets encontrados:', tickets);
+      res.json({ tickets });
+    } catch (error) {
+      console.error('Erro ao buscar tickets:', error);
+      res.status(500).json({ message: 'Erro ao buscar tickets', error: error.message });
     }
-
-    res.json({ tickets });
   } catch (error) {
     console.error('Get all tickets error:', error);
     res.status(500).json({ message: 'Erro ao recuperar tickets' });

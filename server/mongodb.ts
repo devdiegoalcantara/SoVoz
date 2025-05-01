@@ -32,8 +32,9 @@ export const connectToDatabase = async () => {
       family: 4
     };
     
-    await mongoose.connect(MONGODB_URI, options);
+    const db = await mongoose.connect(MONGODB_URI, options);
     console.log('Conectado ao MongoDB com sucesso!');
+    console.log('Database:', db.connection.name);
     isConnected = true;
     return true;
   } catch (error) {
