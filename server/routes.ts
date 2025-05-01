@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./mongo-storage"; // Alterado para usar o MongoDB
 import { verifyToken, isAdmin } from "./middleware/auth";
 import { upload } from "./middleware/upload";
 import * as authController from "./controllers/authController";
