@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { storage } from '../mongo-storage';
 import { InsertTicket } from '../mongo-storage';
-import { TicketModel } from '../mongodb';
 
 // Get all tickets
 export const getAllTickets = async (req: Request, res: Response) => {
@@ -69,10 +68,6 @@ export const createTicket = async (req: Request, res: Response) => {
       attachmentPath = req.file.path;
     }
 
-    // Get the highest sequential ID
-    const lastTicket = await TicketModel.findOne({}, { sequentialId: 1 }).sort({ sequentialId: -1 });
-    const nextSequentialId = (lastTicket?.sequentialId || 0) + 1;
-
     // Get user ID if authenticated
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
@@ -87,7 +82,6 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 
     const ticketData = {
-      sequentialId: nextSequentialId,
       title: req.body.title,
       description: req.body.description,
       type: req.body.type,
