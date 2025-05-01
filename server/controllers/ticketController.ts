@@ -7,17 +7,27 @@ export const getAllTickets = async (req: Request, res: Response) => {
   try {
     // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
+    // @ts-ignore - Added by auth middleware
+    const userId = req.user?.id;
 
-    // Regular users can only see their own tickets
-    if (userRole === 'user') {
-      // @ts-ignore - Added by auth middleware
-      const userId = req.user?.id;
-      const tickets = await storage.getTicketsByUser(userId);
-      return res.json({ tickets });
+    if (!userRole) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    // Admins can see all tickets
-    const tickets = await storage.getAllTickets();
+    let tickets;
+    if (userRole === 'user') {
+      if (!userId) {
+        return res.status(401).json({ message: 'ID do usuário não encontrado' });
+      }
+      tickets = await storage.getTicketsByUser(userId);
+    } else {
+      tickets = await storage.getAllTickets();
+    }
+
+    if (!tickets) {
+      return res.status(404).json({ message: 'Nenhum ticket encontrado' });
+    }
+
     res.json({ tickets });
   } catch (error) {
     console.error('Get all tickets error:', error);

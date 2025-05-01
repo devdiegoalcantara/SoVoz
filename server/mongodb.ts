@@ -4,8 +4,16 @@ import mongoose from 'mongoose';
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
 if (!MONGODB_URI) {
-  console.error('MONGODB_URI não configurado nas variáveis de ambiente');
+  throw new Error('MONGODB_URI não configurado nas variáveis de ambiente');
 }
+
+// Opções de conexão do MongoDB
+const mongooseOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
 
 // Variável para rastrear o estado da conexão
 export let isConnected = false;
