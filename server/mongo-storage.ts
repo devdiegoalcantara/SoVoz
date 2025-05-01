@@ -60,7 +60,7 @@ export interface IStorage {
   getTicketsByType(type: string): Promise<Ticket[]>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   updateTicketStatus(id: string, status: string): Promise<Ticket | undefined>;
-  
+
   // Statistics
   getTicketCountByType(): Promise<{ type: string; count: number }[]>;
   getTicketCountByStatus(): Promise<{ status: string; count: number }[]>;
@@ -82,7 +82,7 @@ export class MongoDBStorage implements IStorage {
         console.error('Erro ao importar armazenamento em memória:', error);
       }
     }
-    
+
     // Conectar ao MongoDB quando o armazenamento for inicializado
     this.initializeDatabase();
   }
@@ -90,10 +90,10 @@ export class MongoDBStorage implements IStorage {
   private async initializeDatabase() {
     try {
       await connectToDatabase();
-      
+
       // Verifica se já existe um usuário administrador
       const adminExists = await UserModel.findOne({ email: 'admin@example.com' });
-      
+
       if (!adminExists) {
         // Cria o administrador padrão se não existir
         await this.createUser({
@@ -275,12 +275,12 @@ export class MongoDBStorage implements IStorage {
       if (ticketData.userId) {
         ticketData.userId = new Types.ObjectId(ticketData.userId) as unknown as string;
       }
-      
+
       const ticket = new TicketModel({
         ...ticketData,
         createdAt: new Date()
       });
-      
+
       await ticket.save();
       return this.mapTicketDocument(ticket);
     } catch (error) {
@@ -302,7 +302,7 @@ export class MongoDBStorage implements IStorage {
         { status },
         { new: true }
       );
-      
+
       return updatedTicket ? this.mapTicketDocument(updatedTicket) : undefined;
     } catch (error) {
       console.error('Erro ao atualizar status do ticket:', error);
@@ -322,7 +322,7 @@ export class MongoDBStorage implements IStorage {
         { $group: { _id: "$type", count: { $sum: 1 } } },
         { $project: { _id: 0, type: "$_id", count: 1 } }
       ]);
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao buscar contagem de tickets por tipo:', error);
@@ -340,7 +340,7 @@ export class MongoDBStorage implements IStorage {
         { $group: { _id: "$status", count: { $sum: 1 } } },
         { $project: { _id: 0, status: "$_id", count: 1 } }
       ]);
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao buscar contagem de tickets por status:', error);
@@ -360,7 +360,7 @@ export class MongoDBStorage implements IStorage {
         { $sort: { count: -1 } },
         { $limit: 6 }
       ]);
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao buscar departamentos mais citados:', error);
@@ -368,6 +368,72 @@ export class MongoDBStorage implements IStorage {
     }
   }
 }
+
+// Get ticket count by type
+export const getTicketCountByType = async () => {
+  const typeStats = await TicketModel.aggregate([
+    {
+      $group: {
+        _id: "$type",
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        type: "$_id",
+        count: 1
+      }
+    }
+  ]);
+  return typeStats;
+};
+
+// Get ticket count by status
+export const getTicketCountByStatus = async () => {
+  const statusStats = await TicketModel.aggregate([
+    {
+      $group: {
+        _id: "$status",
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        status: "$_id",
+        count: 1
+      }
+    }
+  ]);
+  return statusStats;
+};
+
+// Get most cited departments
+export const getMostCitedDepartments = async () => {
+  const departmentStats = await TicketModel.aggregate([
+    {
+      $group: {
+        _id: "$department",
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        department: "$_id",
+        count: 1
+      }
+    },
+    {
+      $sort: { count: -1 }
+    },
+    {
+      $limit: 10
+    }
+  ]);
+  return departmentStats;
+};
 
 // Inicialize o armazenamento com a classe do MongoDB
 export const storage = new MongoDBStorage();
