@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ token: string; user: User } | null>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  apiRequestWithAuth: (method: string, url: string, body?: any) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,28 +67,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const res = await apiRequest("POST", "/api/auth/login", { email, password });
-      const data = await res.json();
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      toast({
-        title: "Login bem-sucedido",
-        description: "Você está conectado agora.",
-      });
+      const response = await apiRequest('POST', '/api/auth/login', { email, password });
+      console.log('Login response:', response);
 
-      // Redirect based on user role
-      if (data.user.role === 'admin') {
-        setLocation("/dashboard");
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        setToken(response.token); // Added to keep state consistent
+        toast({
+          title: "Login bem-sucedido",
+          description: "Você está conectado agora.",
+        });
+
+        // Redirect based on user role
+        if (response.user.role === 'admin') {
+          setLocation("/dashboard");
+        } else {
+          setLocation("/tickets");
+        }
+        return response;
       } else {
-        setLocation("/tickets");
+        throw new Error('Token não recebido do servidor');
       }
-      return data;
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Erro de login",
-        description: "Email ou senha inválidos.",
+        description: error.message || "Email ou senha inválidos.",
         variant: "destructive",
       });
       return null;

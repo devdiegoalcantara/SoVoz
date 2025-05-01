@@ -15,7 +15,10 @@ export const apiRequest = async (
   }
 
   try {
-    const response = await fetch(url, {
+    const baseUrl = "/api";
+    const fullUrl = url.startsWith("/api") ? url : `${baseUrl}${url}`;
+    
+    const response = await fetch(fullUrl, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -23,6 +26,7 @@ export const apiRequest = async (
     });
 
     const data = await response.json();
+    console.log('API Response:', data);
 
     if (!response.ok) {
       throw new Error(data.message || `Erro na requisição: ${response.status}`);
