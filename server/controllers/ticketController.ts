@@ -28,7 +28,7 @@ export const getAllTickets = async (req: Request, res: Response) => {
 // Get ticket by ID
 export const getTicketById = async (req: Request, res: Response) => {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = req.params.id;
     const ticket = await storage.getTicket(ticketId);
 
     if (!ticket) {
@@ -64,17 +64,12 @@ export const createTicket = async (req: Request, res: Response) => {
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
-    // Validate request body
-    const validationResult = insertTicketSchema.safeParse({
-      ...req.body,
-      userId: userId || null,
-      attachmentPath
-    });
-
-    if (!validationResult.success) {
+    // Validação básica
+    const { title, description, type, department } = req.body;
+    
+    if (!title || !description || !type || !department) {
       return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: validationResult.error.format() 
+        message: 'Os campos título, descrição, tipo e departamento são obrigatórios' 
       });
     }
 
@@ -105,7 +100,7 @@ export const createTicket = async (req: Request, res: Response) => {
 // Update ticket status
 export const updateTicketStatus = async (req: Request, res: Response) => {
   try {
-    const ticketId = parseInt(req.params.id);
+    const ticketId = req.params.id;
     const { status } = req.body;
 
     if (!status || !['Novo', 'Em andamento', 'Resolvido'].includes(status)) {
