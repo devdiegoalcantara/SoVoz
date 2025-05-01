@@ -40,7 +40,7 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Envie um Ticket</h2>
                 <p className="text-gray-600">
-                  Reporte problemas, envie sugestões ou compartilhe um feedback sobre o sistema SoGov
+                  Reporte problemas, envie sugestões ou compartilhe um feedback sobre o sistema SoVoz
                 </p>
               </div>
               
@@ -95,7 +95,7 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Sobre o SoVoz</h2>
                 <p className="text-gray-600">
-                  Um sistema desenvolvido para facilitar a comunicação entre usuários e a equipe do SoGov
+                  Um sistema desenvolvido para facilitar a comunicação entre usuários e a equipe de atendimento
                 </p>
               </div>
               
