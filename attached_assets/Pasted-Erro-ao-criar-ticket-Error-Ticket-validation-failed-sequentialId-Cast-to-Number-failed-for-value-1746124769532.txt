@@ -1,0 +1,79 @@
+Erro ao criar ticket: Error: Ticket validation failed: sequentialId: Cast to Number failed for value "NaN" (type number) at path "sequentialId"
+    at ValidationError.inspect (/home/runner/workspace/node_modules/mongoose/lib/error/validation.js:52:26)
+    at formatValue (node:internal/util/inspect:809:19)
+    at inspect (node:internal/util/inspect:368:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2307:40)
+    at formatWithOptions (node:internal/util/inspect:2169:10)
+    at console.value (node:internal/console/constructor:350:14)
+    at console.warn (node:internal/console/constructor:383:61)
+    at MongoDBStorage.createTicket (/home/runner/workspace/server/mongo-storage.ts:287:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async createTicket (/home/runner/workspace/server/controllers/ticketController.ts:102:23) {
+  errors: {
+    sequentialId: CastError: Cast to Number failed for value "NaN" (type number) at path "sequentialId"
+        at SchemaNumber.cast (/home/runner/workspace/node_modules/mongoose/lib/schema/number.js:381:11)
+        at SchemaType.applySetters (/home/runner/workspace/node_modules/mongoose/lib/schemaType.js:1255:12)
+        at model.$set (/home/runner/workspace/node_modules/mongoose/lib/document.js:1438:22)
+        at model.$set (/home/runner/workspace/node_modules/mongoose/lib/document.js:1132:16)
+        at model.Document (/home/runner/workspace/node_modules/mongoose/lib/document.js:178:12)
+        at model.Model (/home/runner/workspace/node_modules/mongoose/lib/model.js:128:12)
+        at new model (/home/runner/workspace/node_modules/mongoose/lib/model.js:4813:15)
+        at MongoDBStorage.createTicket (/home/runner/workspace/server/mongo-storage.ts:279:22)
+        at createTicket (/home/runner/workspace/server/controllers/ticketController.ts:102:37)
+        at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+      stringValue: '"NaN"',
+      messageFormat: undefined,
+      kind: 'Number',
+      value: NaN,
+      path: 'sequentialId',
+      reason: AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+      
+        assert.ok(!isNaN(val))
+      
+          at castNumber (/home/runner/workspace/node_modules/mongoose/lib/cast/number.js:27:10)
+          at SchemaNumber.cast (/home/runner/workspace/node_modules/mongoose/lib/schema/number.js:379:12)
+          at SchemaType.applySetters (/home/runner/workspace/node_modules/mongoose/lib/schemaType.js:1255:12)
+          at model.$set (/home/runner/workspace/node_modules/mongoose/lib/document.js:1438:22)
+          at model.$set (/home/runner/workspace/node_modules/mongoose/lib/document.js:1132:16)
+          at model.Document (/home/runner/workspace/node_modules/mongoose/lib/document.js:178:12)
+          at model.Model (/home/runner/workspace/node_modules/mongoose/lib/model.js:128:12)
+          at new model (/home/runner/workspace/node_modules/mongoose/lib/model.js:4813:15)
+          at MongoDBStorage.createTicket (/home/runner/workspace/server/mongo-storage.ts:279:22)
+          at createTicket (/home/runner/workspace/server/controllers/ticketController.ts:102:37)
+          at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+        generatedMessage: true,
+        code: 'ERR_ASSERTION',
+        actual: false,
+        expected: true,
+        operator: '=='
+      },
+      valueType: 'number'
+    }
+  },
+  _message: 'Ticket validation failed'
+}
+Create ticket error: error: relation "tickets" does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createTicket (/home/runner/workspace/server/storage.ts:76:22)
+    at async createTicket (/home/runner/workspace/server/controllers/ticketController.ts:102:23) {
+  length: 106,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '13',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:30:03 PM [express] POST /api/tickets 500 in 1107ms :: {"message":"Server error creating ticket"}
