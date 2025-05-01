@@ -21,10 +21,15 @@ export let isConnected = false;
 // Conectar ao MongoDB
 export const connectToDatabase = async () => {
   try {
-    // Adicionando opções para conexão mais rápida
+    if (isConnected) {
+      return true;
+    }
+
     const options = {
-      serverSelectionTimeoutMS: 5000, // Tempo limite de 5 segundos para seleção de servidor
-      connectTimeoutMS: 10000, // Tempo limite de 10 segundos para conexão
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4
     };
     
     await mongoose.connect(MONGODB_URI, options);
@@ -34,7 +39,7 @@ export const connectToDatabase = async () => {
   } catch (error) {
     console.error('Erro ao conectar com MongoDB:', error);
     isConnected = false;
-    return false;
+    throw error;
   }
 };
 

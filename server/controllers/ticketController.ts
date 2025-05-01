@@ -14,24 +14,17 @@ export const getAllTickets = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    let tickets;
-    if (userRole === 'user') {
-      if (!userId) {
-        return res.status(401).json({ message: 'ID do usuário não encontrado' });
-      }
-      tickets = await storage.getTicketsByUser(userId);
-    } else {
+    let tickets = [];
+    if (userRole === 'admin') {
       tickets = await storage.getAllTickets();
-    }
-
-    if (!tickets) {
-      return res.status(404).json({ message: 'Nenhum ticket encontrado' });
+    } else if (userId) {
+      tickets = await storage.getTicketsByUser(userId);
     }
 
     res.json({ tickets });
   } catch (error) {
     console.error('Get all tickets error:', error);
-    res.status(500).json({ message: 'Server error retrieving tickets' });
+    res.status(500).json({ message: 'Erro ao recuperar tickets' });
   }
 };
 

@@ -1,3 +1,4 @@
+
 import { QueryClient } from "@tanstack/react-query";
 
 export const apiRequest = async (
@@ -20,7 +21,6 @@ export const apiRequest = async (
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -34,6 +34,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
     },
   },
 });
