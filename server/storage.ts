@@ -55,7 +55,16 @@ export class MemStorage implements IStorage {
 
   async createUser(userData: InsertUser): Promise<User> {
     const id = this.userId++;
-    const user: User = { id, ...userData };
+    
+    // Create a properly typed user object by explicitly assigning all fields
+    const user: User = {
+      id,
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      role: userData.role ?? "user"
+    };
+    
     this.users.set(id, user);
     return user;
   }
@@ -90,7 +99,22 @@ export class MemStorage implements IStorage {
   async createTicket(ticketData: InsertTicket): Promise<Ticket> {
     const id = this.ticketId++;
     const createdAt = new Date();
-    const ticket: Ticket = { id, ...ticketData, createdAt };
+    
+    // Create a properly typed ticket object by explicitly assigning all fields
+    const ticket: Ticket = {
+      id,
+      title: ticketData.title,
+      description: ticketData.description,
+      type: ticketData.type,
+      department: ticketData.department,
+      status: ticketData.status ?? "Novo",
+      submitterName: ticketData.submitterName ?? null,
+      submitterEmail: ticketData.submitterEmail ?? null,
+      userId: ticketData.userId ?? null,
+      attachmentPath: ticketData.attachmentPath ?? null,
+      createdAt
+    };
+    
     this.tickets.set(id, ticket);
     return ticket;
   }
