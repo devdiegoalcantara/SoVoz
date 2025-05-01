@@ -102,25 +102,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const res = await apiRequest("POST", "/api/auth/register", {
+      const response = await apiRequest("POST", "/api/auth/register", {
         name,
         email,
         password,
       });
-      const data = await res.json();
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      toast({
-        title: "Registro bem-sucedido",
-        description: "Sua conta foi criada.",
-      });
-      setLocation("/tickets");
-    } catch (error) {
+      console.log('Register response:', response);
+      
+      if (response.token && response.user) {
+        setUser(response.user);
+        setToken(response.token);
+        localStorage.setItem("token", response.token);
+        toast({
+          title: "Registro bem-sucedido",
+          description: "Sua conta foi criada.",
+        });
+        setLocation("/tickets");
+      } else {
+        throw new Error('Dados de registro inválidos');
+      }
+    } catch (error: any) {
       console.error("Registration error:", error);
       toast({
         title: "Erro no registro",
-        description: "Não foi possível criar sua conta.",
+        description: error.message || "Não foi possível criar sua conta.",
         variant: "destructive",
       });
     }
