@@ -28,7 +28,7 @@ export default function Home() {
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-primary">Bem-vindo ao SoVoz</h1>
-          <p className="mt-2 text-gray-600">Sistema de Atendimento SoVoz para reporte de bugs, sugestões e feedbacks</p>
+          <p className="mt-2 text-gray-600">Sistema de Atendimento ao SoGov para reporte de bugs, sugestões e feedbacks</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
@@ -40,7 +40,7 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Envie um Ticket</h2>
                 <p className="text-gray-600">
-                  Reporte problemas, envie sugestões ou compartilhe um feedback sobre o sistema SoVoz
+                  Reporte problemas, envie sugestões ou compartilhe um feedback sobre o sistema SoGov
                 </p>
               </div>
               

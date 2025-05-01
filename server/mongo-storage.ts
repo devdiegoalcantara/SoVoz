@@ -72,8 +72,12 @@ export class MongoDBStorage implements IStorage {
     // Lazy import to avoid circular dependency
     if (!memStorage) {
       try {
-        const { storage } = require('./storage');
-        memStorage = storage;
+        // Use dynamic import for ES modules
+        import('./storage').then(module => {
+          memStorage = module.storage;
+        }).catch(error => {
+          console.error('Erro ao importar armazenamento em memória:', error);
+        });
       } catch (error) {
         console.error('Erro ao importar armazenamento em memória:', error);
       }

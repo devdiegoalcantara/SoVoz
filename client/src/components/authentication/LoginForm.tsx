@@ -51,8 +51,7 @@ export default function LoginForm() {
               <i className="fas fa-comment-dots text-white text-3xl"></i>
             </div>
             <h1 className="text-white text-xl font-bold">SoVoz</h1>
-            <p className="text-blue-100 text-sm">Sistema de Atendimento</p>
-          </div>
+            <p className="text-blue-100 text-sm">Sistema de Atendimento ao SoGov</p>  </div>
         </div>
         
         <div className="p-6">
