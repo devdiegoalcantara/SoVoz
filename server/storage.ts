@@ -33,11 +33,12 @@ export class MemStorage implements IStorage {
     this.userId = 1;
     this.ticketId = 1;
     
-    // Create a default admin
-    this.createUser({
+    // Create a default admin with bcrypt hashed password
+    this.users.set(this.userId++, {
+      id: 1,
       name: "Admin",
       email: "admin@example.com",
-      password: "$2a$10$NEoQRE2G0yXTABu1SQ0ymuTqmKgZXCdLedbsMB5TGzGK4g0z1XZiC", // password: admin123
+      password: "$2a$10$pq.v0Ju98i7r09COyPjsP.CQcwz2WtjVggiOPv/1zZKRqXXrw3LYu", // password: admin123
       role: "admin"
     });
   }

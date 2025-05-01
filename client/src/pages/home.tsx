@@ -28,7 +28,7 @@ export default function Home() {
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-primary">Bem-vindo ao SoVoz</h1>
-          <p className="mt-2 text-gray-600">Sistema de Atendimento da SoGov para reporte de bugs, sugestões e feedbacks</p>
+          <p className="mt-2 text-gray-600">Sistema de Atendimento do SoGov para reporte de bugs, sugestões e feedbacks</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
@@ -95,7 +95,7 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Sobre o SoVoz</h2>
                 <p className="text-gray-600">
-                  Um sistema desenvolvido para facilitar a comunicação entre usuários e a equipe da SoGov
+                  Um sistema desenvolvido para facilitar a comunicação entre usuários e a equipe do SoGov
                 </p>
               </div>
               
