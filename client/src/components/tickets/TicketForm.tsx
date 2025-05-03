@@ -112,6 +112,45 @@ export default function TicketForm() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.dataTransfer.files) {
+      const files = Array.from(e.dataTransfer.files);
+      // Verificar tamanho total dos arquivos (máximo 20MB)
+      const allFiles = [...selectedFiles, ...files];
+      const totalSize = allFiles.reduce((acc, file) => acc + file.size, 0);
+      if (totalSize > 20 * 1024 * 1024) {
+        toast({
+          title: "Arquivos muito grandes",
+          description: "O tamanho total dos arquivos deve ser no máximo 20MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Verificar tipos de arquivo
+      const validTypes = ["image/jpeg", "image/png", "video/mp4"];
+      const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Apenas JPG, PNG e MP4 são permitidos",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Remover duplicados pelo nome do arquivo
+      const uniqueFiles = Array.from(new Map(allFiles.map(f => [f.name, f])).values());
+      setSelectedFiles(uniqueFiles);
+    }
+  };
+
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
@@ -245,7 +284,11 @@ export default function TicketForm() {
             
             <div>
               <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Anexos</FormLabel>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div 
+                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
                 <div className="space-y-1 text-center">
                   <i className="fas fa-cloud-upload-alt mx-auto h-12 w-12 text-gray-400"></i>
                   <div className="flex text-sm text-gray-600">
