@@ -32,7 +32,7 @@ export const getAllTickets = async (req: Request, res: Response) => {
       
       // Get paginated tickets
       const tickets = await TicketModel.find(query)
-        .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
+        .select('sequentialId title type department status createdAt description submitterName submitterEmail userId comments')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
