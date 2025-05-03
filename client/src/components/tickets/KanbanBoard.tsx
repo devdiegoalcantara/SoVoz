@@ -122,6 +122,7 @@ export default function KanbanBoard() {
       id: draggedTicket.id,
       status,
     });
+    setDraggedTicket(null);
   };
 
   // Group tickets by status
