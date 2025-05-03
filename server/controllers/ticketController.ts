@@ -113,9 +113,15 @@ export const getTicketById = async (req: Request, res: Response) => {
 export const createTicket = async (req: Request, res: Response) => {
   (res as any).header('Cache-Control', 'no-store');
   try {
-    let attachments = [];
+    type AttachmentType = {
+      data: Buffer;
+      contentType: string;
+      filename: string;
+      createdAt?: Date;
+    };
+    let attachments: AttachmentType[] = [];
     if (req.files && Array.isArray(req.files)) {
-      attachments = req.files.map(file => ({
+      attachments = (req.files as Express.Multer.File[]).map((file) => ({
         data: file.buffer,
         contentType: file.mimetype,
         filename: file.originalname,
@@ -279,8 +285,9 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
       }
 
       const attachment = ticket.attachments[parseInt(attachmentIndex)];
-
-      // Converter os dados para Buffer
+      if (!attachment.data) {
+        return res.status(404).json({ message: 'Anexo não encontrado' });
+      }
       const bufferData = Buffer.from(attachment.data.toString('base64'), 'base64');
 
       // Configurar os headers corretamente

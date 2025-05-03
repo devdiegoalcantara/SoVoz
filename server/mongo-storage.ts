@@ -53,11 +53,12 @@ export interface InsertTicket {
   submitterName?: string | null;
   submitterEmail?: string | null;
   userId?: string | null;
-  attachment?: {
+  attachments?: {
     data: Buffer;
     contentType: string;
     filename: string;
-  } | null;
+    createdAt?: Date;
+  }[];
 }
 
 export interface IStorage {
