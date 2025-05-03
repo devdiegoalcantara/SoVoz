@@ -47,9 +47,9 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
       // Em produção, servimos os arquivos estáticos
-      app.use(express.static(path.join(__dirname, "client/dist")));
+      app.use(express.static(path.join(process.cwd(), "client/dist")));
       app.get("*", (req, res) => {
-        res.sendFile(path.join(__dirname, "client/dist/index.html"));
+        res.sendFile(path.join(process.cwd(), "client/dist/index.html"));
       });
     } else {
       // Em desenvolvimento, usamos o Vite
