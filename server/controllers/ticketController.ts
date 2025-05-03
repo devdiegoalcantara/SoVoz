@@ -278,7 +278,7 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
       }
 
       // Set proper headers
-      res.setHeader('Content-Type', ticket.attachment.contentType);
+      res.setHeader('Content-Type', ticket.attachment.contentType || 'application/octet-stream');
       res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
 

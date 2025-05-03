@@ -6,11 +6,20 @@ import { upload } from "./middleware/upload";
 import * as authController from "./controllers/authController";
 import * as ticketController from "./controllers/ticketController";
 import path from "path";
-import express from "express";
+import express, { Router } from "express";
+import { Request, Response, NextFunction } from 'express';
+
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup routes
-  const apiRouter = express.Router();
+  const apiRouter = Router();
   app.use('/api', apiRouter);
 
   // Serve uploaded files
@@ -19,18 +28,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   apiRouter.post('/auth/register', authController.register);
   apiRouter.post('/auth/login', authController.login);
-  apiRouter.get('/auth/user', verifyToken, authController.getCurrentUser);
+  apiRouter.get('/auth/user', verifyToken as any, authController.getCurrentUser);
 
   // Ticket routes
-  apiRouter.get('/tickets', verifyToken, ticketController.getAllTickets);
-  apiRouter.get('/tickets/:id', verifyToken, ticketController.getTicketById);
-  apiRouter.get('/tickets/:id/attachment', verifyToken, ticketController.getTicketAttachment);
-  apiRouter.post('/tickets', upload.single('attachment'), ticketController.createTicket);
-  apiRouter.patch('/tickets/:id/status', verifyToken, isAdmin, ticketController.updateTicketStatus);
-  apiRouter.post('/tickets/:id/comments', verifyToken, ticketController.addComment);
+  apiRouter.get('/tickets', verifyToken as any, ticketController.getAllTickets);
+  apiRouter.get('/tickets/:id', verifyToken as any, ticketController.getTicketById);
+  apiRouter.get('/tickets/:id/attachment', verifyToken as any, ticketController.getTicketAttachment);
+  apiRouter.post('/tickets', verifyToken as any, ticketController.createTicket);
+  apiRouter.patch('/tickets/:id/status', verifyToken as any, isAdmin as any, ticketController.updateTicketStatus);
+  apiRouter.post('/tickets/:id/comments', verifyToken as any, ticketController.addComment);
 
   // Statistics routes
-  apiRouter.get('/statistics', verifyToken, isAdmin, ticketController.getTicketStatistics);
+  apiRouter.get('/statistics', verifyToken as any, isAdmin as any, ticketController.getTicketStatistics);
 
   const httpServer = createServer(app);
 
