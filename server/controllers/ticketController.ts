@@ -1,44 +1,79 @@
 import { Request, Response } from 'express';
 import { storage } from '../mongo-storage';
 import { InsertTicket, Ticket } from '../mongo-storage';
-import { TicketModel } from '../mongodb';
+import { TicketModel } from '../models/ticketModel';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import { Types } from 'mongoose';
+import Redis from 'ioredis';
 
-// Get all tickets
+// Initialize Redis client
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+// Cache duration in seconds (5 minutes)
+const CACHE_DURATION = 300;
+
+// Helper function to get cache key
+const getCacheKey = (userId: string, page: number, limit: number) => 
+  `tickets:${userId}:${page}:${limit}`;
+
+// Get all tickets with pagination
 export const getAllTickets = async (req: Request, res: Response) => {
-  res.header('Cache-Control', 'no-store');
+  (res as any).header('Cache-Control', 'no-store');
   try {
     // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
-    console.log('User role:', userRole);
-    console.log('User ID:', userId);
-
     if (!userRole) {
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    let tickets: Ticket[] = [];
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
     try {
-      if (userRole === 'admin') {
-        tickets = await TicketModel.find({})
-          .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
-          .sort({ createdAt: -1 })
-          .lean()
-          .exec();
-      } else if (userId) {
-        tickets = await TicketModel.find({ userId })
-          .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
-          .sort({ createdAt: -1 })
-          .lean()
-          .exec();
+      // Try to get from cache first
+      const cacheKey = getCacheKey(userId, page, limit);
+      const cachedData = await redis.get(cacheKey);
+      
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
       }
-      // Mapear para garantir o campo id
-      const mappedTickets = (tickets || []).map(t => ({ ...t, id: t._id ? t._id.toString() : t.id }));
-      res.json({ tickets: mappedTickets });
+
+      const query = userRole === 'admin' ? {} : { userId };
+      
+      // Get total count for pagination
+      const total = await TicketModel.countDocuments(query);
+      
+      // Get paginated tickets
+      const tickets = await TicketModel.find(query)
+        .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec();
+      
+      // Format response
+      const mappedTickets = tickets.map(t => ({ ...t, id: (t as any)._id.toString() }));
+      const response = {
+        tickets: mappedTickets,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      };
+
+      // Cache the response
+      await redis.setex(cacheKey, CACHE_DURATION, JSON.stringify(response));
+
+      res.json(response);
     } catch (error: unknown) {
       console.error('Error fetching tickets:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -51,30 +86,62 @@ export const getAllTickets = async (req: Request, res: Response) => {
   }
 };
 
-// Get ticket by ID
+// Get ticket by ID with caching
 export const getTicketById = async (req: Request, res: Response) => {
-  res.header('Cache-Control', 'no-store');
+  (res as any).header('Cache-Control', 'no-store');
   try {
-    const ticketId = req.params.id;
-    const ticket = await TicketModel.findById(ticketId).lean().exec();
-
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket não encontrado' });
-    }
-
+    const { id } = req.params;
     // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
-    // Usuários comuns só podem ver seus próprios tickets
-    if (userRole === 'user' && ticket.userId !== userId) {
-      return res.status(403).json({ message: 'Acesso negado' });
+    if (!userRole) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    // Garantir campo id
-    res.json({ ticket: { ...ticket, id: ticket._id ? ticket._id.toString() : ticket.id } });
+    try {
+      // Try to get from cache first
+      const cacheKey = `ticket:${id}`;
+      const cachedData = await redis.get(cacheKey);
+      
+      if (cachedData) {
+        const ticket = JSON.parse(cachedData);
+        // Check if user has access to the cached ticket
+        if (userRole === 'user' && ticket.userId !== userId) {
+          return res.status(403).json({ message: 'Acesso negado' });
+        }
+        return res.json({ ticket });
+      }
+
+      const query = userRole === 'admin' ? { _id: id } : { _id: id, userId };
+      const ticket = await TicketModel.findOne(query)
+        .select('-__v')
+        .lean()
+        .exec();
+
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket não encontrado' });
+      }
+
+      // Convert _id to id and ensure all fields are properly typed
+      const formattedTicket = {
+        ...ticket,
+        id: (ticket as any)._id.toString(),
+        _id: undefined
+      };
+
+      // Cache the ticket
+      await redis.setex(cacheKey, CACHE_DURATION, JSON.stringify(formattedTicket));
+
+      res.json({ ticket: formattedTicket });
+    } catch (error: unknown) {
+      console.error('Error fetching ticket:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      res.status(500).json({ message: 'Erro ao buscar ticket', error: errorMessage });
+    }
   } catch (error: unknown) {
+    console.error('Error in getTicketById:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar ticket' });
   }
