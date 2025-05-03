@@ -12,7 +12,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["server/*"]
-    }
+    },
+    "allowJs": true,
+    "resolveJsonModule": true
   },
   "include": ["server/**/*"],
   "exclude": ["node_modules", "dist", "client"]

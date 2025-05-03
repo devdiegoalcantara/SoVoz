@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-import { connectToDatabase } from "./mongodb";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
+import { connectToDatabase } from "./mongodb.js";
 import path from "path";
 import { __dirname } from "./utils/dirname.js";
 
