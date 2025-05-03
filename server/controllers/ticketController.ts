@@ -87,11 +87,13 @@ export const createTicket = async (req: Request, res: Response) => {
     let attachment = undefined;
     if (req.file) {
       try {
+        console.log('Upload:', req.file.originalname, req.file.mimetype, req.file.size, req.file.path);
         attachment = {
           data: fs.readFileSync(req.file.path),
           contentType: req.file.mimetype,
           filename: req.file.originalname,
         };
+        console.log('Attachment buffer length:', attachment.data.length, 'Content-Type:', attachment.contentType);
       } finally {
         // Limpar o arquivo temporário
         if (fs.existsSync(req.file.path)) {
