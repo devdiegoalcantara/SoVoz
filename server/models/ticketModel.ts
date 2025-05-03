@@ -12,9 +12,9 @@ const ticketSchema = new mongoose.Schema({
   userId: { type: String },
   createdAt: { type: Date, default: Date.now },
   attachment: {
-    data: Buffer,
-    contentType: String,
-    filename: String
+    data: { type: Buffer, required: true },
+    contentType: { type: String, required: true },
+    filename: { type: String, required: true }
   },
   comments: [{
     author: String,

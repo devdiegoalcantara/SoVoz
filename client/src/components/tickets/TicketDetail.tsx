@@ -128,11 +128,22 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
           });
+          
+          if (!response.ok) {
+            throw new Error('Erro ao carregar anexo');
+          }
+          
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           
           if (data.ticket.attachment.contentType?.startsWith('image/') && imgRef.current) {
             imgRef.current.src = url;
+            imgRef.current.onerror = () => {
+              console.error('Erro ao carregar imagem');
+              if (imgRef.current) {
+                imgRef.current.src = ''; // Limpa a src em caso de erro
+              }
+            };
           } else if (data.ticket.attachment.contentType === 'video/mp4' && videoRef.current) {
             videoRef.current.src = url;
           }
