@@ -14,6 +14,13 @@ const mongooseOptions = {
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
+  maxPoolSize: 50,
+  minPoolSize: 10,
+  connectTimeoutMS: 10000,
+  heartbeatFrequencyMS: 2000,
+  retryWrites: true,
+  retryReads: true,
+  family: 4
 };
 
 // Variável para rastrear o estado da conexão
@@ -26,17 +33,7 @@ export const connectToDatabase = async () => {
       return true;
     }
 
-    const options = {
-      serverSelectionTimeoutMS: 30000,
-      connectTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      family: 4,
-      maxPoolSize: 10,
-      retryWrites: true,
-      retryReads: true
-    };
-    
-    const db = await mongoose.connect(MONGODB_URI, options);
+    const db = await mongoose.connect(MONGODB_URI, mongooseOptions);
     console.log('Conectado ao MongoDB com sucesso!');
     console.log('Database:', db.connection.name);
     isConnected = true;

@@ -23,11 +23,17 @@ export const getAllTickets = async (req: Request, res: Response) => {
     let tickets: Ticket[] = [];
     try {
       if (userRole === 'admin') {
-        tickets = await storage.getAllTickets();
-        console.log('Admin tickets:', tickets);
+        // Otimizar query para admin
+        tickets = await TicketModel.find()
+          .select('sequentialId title type department status createdAt')
+          .sort({ createdAt: -1 })
+          .lean();
       } else if (userId) {
-        tickets = await storage.getTicketsByUser(userId);
-        console.log('User tickets:', tickets);
+        // Otimizar query para usuário comum
+        tickets = await TicketModel.find({ userId })
+          .select('sequentialId title type department status createdAt')
+          .sort({ createdAt: -1 })
+          .lean();
       }
       res.json({ tickets: tickets || [] });
     } catch (error: unknown) {

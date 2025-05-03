@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -33,37 +33,37 @@ export default function TicketTable() {
     queryKey: ["/api/tickets"],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      console.log('Token:', token);
-      
       const response = await fetch("/api/tickets", {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      console.log('Response status:', response.status);
-      const result = await response.json();
-      console.log('Response data:', result);
-      
       if (!response.ok) {
         throw new Error('Erro ao carregar tickets');
       }
+      const result = await response.json();
       return { tickets: (result.tickets || []).map((t: any) => ({ ...t, id: t.id || t._id })) };
-    }
+    },
+    staleTime: 30000, // Cache por 30 segundos
+    cacheTime: 5 * 60 * 1000, // Manter no cache por 5 minutos
   });
 
-  // Filter and search tickets
-  const filteredTickets = data?.tickets.filter((ticket: Ticket) => {
-    console.log('Filtering ticket:', ticket);
-    const matchesType = filters.type ? ticket.type === filters.type : true;
-    const matchesStatus = filters.status ? ticket.status === filters.status : true;
-    const matchesSearch = searchQuery
-      ? ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ticket.department.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
+  // Memoize filtered tickets
+  const filteredTickets = useMemo(() => {
+    if (!data?.tickets) return [];
+    
+    return data.tickets.filter((ticket: Ticket) => {
+      const matchesType = filters.type ? ticket.type === filters.type : true;
+      const matchesStatus = filters.status ? ticket.status === filters.status : true;
+      const matchesSearch = searchQuery
+        ? ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          ticket.department.toLowerCase().includes(searchQuery.toLowerCase())
+        : true;
 
-    return matchesType && matchesStatus && matchesSearch;
-  }) || [];
+      return matchesType && matchesStatus && matchesSearch;
+    });
+  }, [data?.tickets, filters.type, filters.status, searchQuery]);
 
   // Pagination
   const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
