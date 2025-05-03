@@ -49,26 +49,48 @@ export default function KanbanBoard() {
       }
       const result = await response.json();
       return { tickets: result.tickets || [] };
-    }
+    },
+    staleTime: 30000, // cache por 30s
+    cacheTime: 5 * 60 * 1000, // cache por 5min
   });
 
-  // Update ticket status mutation
+  // Update ticket status mutation com optimistic update
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      if (!id) throw new Error('ID do ticket não pode ser undefined!');
       return await apiRequest("PATCH", `/api/tickets/${id}/status`, { status });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-      toast({
-        title: "Status atualizado",
-        description: "Ticket movido com sucesso.",
-      });
+    onMutate: async ({ id, status }) => {
+      // Optimistic update: atualiza o cache antes da resposta do backend
+      await queryClient.cancelQueries({ queryKey: ["/api/tickets"] });
+      const previousData = queryClient.getQueryData<{ tickets: Ticket[] }>(["/api/tickets"]);
+      if (previousData) {
+        queryClient.setQueryData(["/api/tickets"], {
+          tickets: previousData.tickets.map(ticket =>
+            ticket.id === id ? { ...ticket, status } : ticket
+          )
+        });
+      }
+      return { previousData };
     },
-    onError: () => {
+    onError: (err, variables, context: any) => {
+      // Reverte o cache se der erro
+      if (context?.previousData) {
+        queryClient.setQueryData(["/api/tickets"], context.previousData);
+      }
       toast({
         title: "Erro ao mover ticket",
         description: "Não foi possível atualizar o status do ticket.",
         variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status atualizado",
+        description: "Ticket movido com sucesso.",
       });
     },
   });
@@ -94,11 +116,8 @@ export default function KanbanBoard() {
 
   // Handle drop
   const handleDrop = async (status: string) => {
-    if (!draggedTicket) return;
-
-    // Don't update if status is the same
+    if (!draggedTicket || !draggedTicket.id) return;
     if (draggedTicket.status === status) return;
-
     await updateStatusMutation.mutateAsync({
       id: draggedTicket.id,
       status,
@@ -117,6 +136,7 @@ export default function KanbanBoard() {
 
   // Função para alterar status direto no card
   const handleStatusChange = async (ticket: Ticket, newStatus: string) => {
+    if (!ticket.id) return;
     setStatusLoading((prev) => ({ ...prev, [ticket.id]: true }));
     await updateStatusMutation.mutateAsync({ id: ticket.id, status: newStatus });
     setStatusLoading((prev) => ({ ...prev, [ticket.id]: false }));

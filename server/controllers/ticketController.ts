@@ -7,6 +7,7 @@ import path from 'path';
 
 // Get all tickets
 export const getAllTickets = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
@@ -23,17 +24,17 @@ export const getAllTickets = async (req: Request, res: Response) => {
     let tickets: Ticket[] = [];
     try {
       if (userRole === 'admin') {
-        // Otimizar query para admin
-        tickets = await TicketModel.find()
-          .select('sequentialId title type department status createdAt')
+        tickets = await TicketModel.find({})
+          .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
           .sort({ createdAt: -1 })
-          .lean();
+          .lean()
+          .exec();
       } else if (userId) {
-        // Otimizar query para usuário comum
         tickets = await TicketModel.find({ userId })
-          .select('sequentialId title type department status createdAt')
+          .select('sequentialId title type department status createdAt description submitterName submitterEmail userId')
           .sort({ createdAt: -1 })
-          .lean();
+          .lean()
+          .exec();
       }
       res.json({ tickets: tickets || [] });
     } catch (error: unknown) {
@@ -50,9 +51,10 @@ export const getAllTickets = async (req: Request, res: Response) => {
 
 // Get ticket by ID
 export const getTicketById = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     const ticketId = req.params.id;
-    const ticket = await storage.getTicket(ticketId);
+    const ticket = await TicketModel.findById(ticketId).lean().exec();
 
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket não encontrado' });
@@ -77,6 +79,7 @@ export const getTicketById = async (req: Request, res: Response) => {
 
 // Create a new ticket
 export const createTicket = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     let attachment = undefined;
     if (req.file) {
@@ -95,7 +98,7 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 
     // Get the highest sequential ID
-    const lastTicket = await TicketModel.findOne().sort({ sequentialId: -1 }).exec();
+    const lastTicket = await TicketModel.findOne({}).sort({ sequentialId: -1 }).exec();
     const nextSequentialId = lastTicket ? Number(lastTicket.sequentialId) + 1 : 1;
 
     // Get user ID if authenticated
@@ -124,7 +127,7 @@ export const createTicket = async (req: Request, res: Response) => {
       attachment: attachment || undefined
     };
 
-    const newTicket = await storage.createTicket(ticketData);
+    const newTicket = await TicketModel.create(ticketData);
 
     res.status(201).json({
       message: 'Ticket criado com sucesso',
@@ -138,6 +141,7 @@ export const createTicket = async (req: Request, res: Response) => {
 
 // Update ticket status
 export const updateTicketStatus = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     const ticketId = req.params.id;
     const { status } = req.body;
@@ -146,7 +150,11 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Status inválido' });
     }
 
-    const updatedTicket = await storage.updateTicketStatus(ticketId, status);
+    const updatedTicket = await TicketModel.findByIdAndUpdate(
+      ticketId,
+      { status },
+      { new: true }
+    ).lean().exec();
 
     if (!updatedTicket) {
       return res.status(404).json({ message: 'Ticket não encontrado' });
@@ -164,6 +172,7 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
 
 // Get ticket statistics
 export const getTicketStatistics = async (_req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     const [typeStats, statusStats, departmentStats] = await Promise.all([
       storage.getTicketCountByType(),
@@ -191,6 +200,7 @@ export const getTicketStatistics = async (_req: Request, res: Response) => {
 
 // Adicionar comentário ao ticket
 export const addComment = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     const ticketId = req.params.id;
     const { author, text } = req.body;
@@ -201,7 +211,7 @@ export const addComment = async (req: Request, res: Response) => {
       ticketId,
       { $push: { comments: comment } },
       { new: true }
-    );
+    ).lean().exec();
     if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado' });
     res.json({ comments: ticket.comments });
   } catch (error: unknown) {
@@ -212,9 +222,10 @@ export const addComment = async (req: Request, res: Response) => {
 
 // Endpoint para servir o anexo (imagem) diretamente do MongoDB
 export const getTicketAttachment = async (req: Request, res: Response) => {
+  res.header('Cache-Control', 'no-store');
   try {
     const ticketId = req.params.id;
-    const ticket = await TicketModel.findById(ticketId);
+    const ticket = await TicketModel.findById(ticketId).lean().exec();
     
     if (!ticket || !ticket.attachment || !ticket.attachment.data) {
       return res.status(404).send('Anexo não encontrado');
