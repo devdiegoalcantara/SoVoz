@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { storage } from '../mongo-storage.js';
 import { InsertTicket, Ticket } from '../mongo-storage.js';
-import { TicketModel } from '../models/ticketModel';
+import { TicketModel } from '../models/ticketModel.js';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
