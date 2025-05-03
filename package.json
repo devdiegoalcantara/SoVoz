@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
-    "build:client": "cd client && rmdir /s /q node_modules && del package-lock.json && npm install && npm run build",
+    "build:client": "cd client && npm cache clean --force && npm install && npm run build",
     "build:server": "npm ci && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build": "npm ci && npm run build:client && npm run build:server",
     "start": "cross-env NODE_ENV=production node dist/index.js",
