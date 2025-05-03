@@ -53,30 +53,5 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user' }
 }, { timestamps: true });
 
-// Schema de Ticket
-const ticketSchema = new mongoose.Schema({
-  sequentialId: { type: Number, unique: true, required: true },
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  type: { type: String, required: true },
-  department: { type: String, required: true },
-  status: { type: String, default: 'Novo' },
-  submitterName: { type: String },
-  submitterEmail: { type: String },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  attachment: {
-    data: Buffer,
-    contentType: String,
-    filename: String,
-  },
-  createdAt: { type: Date, default: Date.now },
-  comments: [{
-    author: String,
-    text: String,
-    createdAt: { type: Date, default: Date.now }
-  }]
-});
-
-// Criar modelos do Mongoose
+// Criar modelo do Mongoose para User
 export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
-export const TicketModel = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);

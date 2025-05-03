@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
-import { UserModel, TicketModel, connectToDatabase, isConnected } from './mongodb.js';
+import { UserModel, connectToDatabase, isConnected } from './mongodb.js';
+import { TicketModel } from './models/ticketModel.js';
 import bcrypt from 'bcryptjs';
 
 // Definindo interfaces para representar os documentos do MongoDB
