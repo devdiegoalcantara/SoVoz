@@ -9,4 +9,8 @@ services:
         value: production
       - key: NODE_VERSION
         value: 18.17.0
-    plan: free 
+      - key: NPM_CONFIG_PRODUCTION
+        value: false
+    plan: free
+    build:
+      nodeVersion: 18.17.0 
