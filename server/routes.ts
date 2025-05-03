@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ticket routes
   apiRouter.get('/tickets', verifyToken as any, ticketController.getAllTickets);
   apiRouter.get('/tickets/:id', verifyToken as any, ticketController.getTicketById);
-  apiRouter.get('/tickets/:id/attachment', verifyToken as any, ticketController.getTicketAttachment);
+  apiRouter.get('/tickets/:id/attachment/:attachmentIndex', verifyToken as any, ticketController.getTicketAttachment);
   apiRouter.post('/tickets', upload.array('attachments'), ticketController.createTicket);
   apiRouter.patch('/tickets/:id/status', verifyToken as any, isAdmin as any, ticketController.updateTicketStatus);
   apiRouter.post('/tickets/:id/comments', verifyToken as any, ticketController.addComment);
