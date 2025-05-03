@@ -84,9 +84,9 @@ export default function TicketForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      
       // Verificar tamanho total dos arquivos (máximo 20MB)
-      const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+      const allFiles = [...selectedFiles, ...files];
+      const totalSize = allFiles.reduce((acc, file) => acc + file.size, 0);
       if (totalSize > 20 * 1024 * 1024) {
         toast({
           title: "Arquivos muito grandes",
@@ -95,7 +95,6 @@ export default function TicketForm() {
         });
         return;
       }
-      
       // Verificar tipos de arquivo
       const validTypes = ["image/jpeg", "image/png", "video/mp4"];
       const invalidFiles = files.filter(file => !validTypes.includes(file.type));
@@ -107,8 +106,9 @@ export default function TicketForm() {
         });
         return;
       }
-      
-      setSelectedFiles(files);
+      // Remover duplicados pelo nome do arquivo
+      const uniqueFiles = Array.from(new Map(allFiles.map(f => [f.name, f])).values());
+      setSelectedFiles(uniqueFiles);
     }
   };
 
