@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { storage } from '../mongo-storage';
-import { InsertUser } from '../mongo-storage';
+import { storage, InsertUser } from '../mongo-storage.js';
 
 // JWT secret key
 const JWT_SECRET = process.env.JWT_SECRET || 'sovoz-secret-key';
