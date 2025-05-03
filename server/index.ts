@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectToDatabase } from "./mongodb";
 import path from "path";
+import { __dirname } from "./utils/dirname.js";
 
 const app = express();
 app.use(express.json());
