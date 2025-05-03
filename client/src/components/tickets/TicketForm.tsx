@@ -226,8 +226,8 @@ export default function TicketForm() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Bug">Bug</SelectItem>
-                        <SelectItem value="Melhoria">Melhoria</SelectItem>
                         <SelectItem value="Sugestão">Sugestão</SelectItem>
+                        <SelectItem value="Feedback">Feedback</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
