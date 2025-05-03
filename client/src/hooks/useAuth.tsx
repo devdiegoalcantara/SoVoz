@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const apiRequestWithAuth = async (method: string, url: string, body?: any) => {
     const authToken = localStorage.getItem('token');
     const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-    return apiRequest(method, url, body, headers);
+    return apiRequest(method, url, { ...body, headers });
   }
 
   return (

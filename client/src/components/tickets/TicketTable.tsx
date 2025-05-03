@@ -46,7 +46,7 @@ export default function TicketTable() {
   });
 
   // Filter and search tickets
-  const filteredTickets = data?.tickets.filter((ticket) => {
+  const filteredTickets = data?.tickets.filter((ticket: Ticket) => {
     const matchesType = filters.type ? ticket.type === filters.type : true;
     const matchesStatus = filters.status ? ticket.status === filters.status : true;
     const matchesSearch = searchQuery
