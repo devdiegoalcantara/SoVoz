@@ -6,17 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { Types } from 'mongoose';
-import Redis from 'ioredis';
-
-// Initialize Redis client
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-
-// Cache duration in seconds (5 minutes)
-const CACHE_DURATION = 300;
-
-// Helper function to get cache key
-const getCacheKey = (userId: string, page: number, limit: number) => 
-  `tickets:${userId}:${page}:${limit}`;
 
 // Get all tickets with pagination
 export const getAllTickets = async (req: Request, res: Response) => {
@@ -36,14 +25,6 @@ export const getAllTickets = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     try {
-      // Try to get from cache first
-      const cacheKey = getCacheKey(userId, page, limit);
-      const cachedData = await redis.get(cacheKey);
-      
-      if (cachedData) {
-        return res.json(JSON.parse(cachedData));
-      }
-
       const query = userRole === 'admin' ? {} : { userId };
       
       // Get total count for pagination
@@ -70,9 +51,6 @@ export const getAllTickets = async (req: Request, res: Response) => {
         }
       };
 
-      // Cache the response
-      await redis.setex(cacheKey, CACHE_DURATION, JSON.stringify(response));
-
       res.json(response);
     } catch (error: unknown) {
       console.error('Error fetching tickets:', error);
@@ -86,7 +64,7 @@ export const getAllTickets = async (req: Request, res: Response) => {
   }
 };
 
-// Get ticket by ID with caching
+// Get ticket by ID
 export const getTicketById = async (req: Request, res: Response) => {
   (res as any).header('Cache-Control', 'no-store');
   try {
@@ -101,19 +79,6 @@ export const getTicketById = async (req: Request, res: Response) => {
     }
 
     try {
-      // Try to get from cache first
-      const cacheKey = `ticket:${id}`;
-      const cachedData = await redis.get(cacheKey);
-      
-      if (cachedData) {
-        const ticket = JSON.parse(cachedData);
-        // Check if user has access to the cached ticket
-        if (userRole === 'user' && ticket.userId !== userId) {
-          return res.status(403).json({ message: 'Acesso negado' });
-        }
-        return res.json({ ticket });
-      }
-
       const query = userRole === 'admin' ? { _id: id } : { _id: id, userId };
       const ticket = await TicketModel.findOne(query)
         .select('-__v')
@@ -131,9 +96,6 @@ export const getTicketById = async (req: Request, res: Response) => {
         _id: undefined
       };
 
-      // Cache the ticket
-      await redis.setex(cacheKey, CACHE_DURATION, JSON.stringify(formattedTicket));
-
       res.json({ ticket: formattedTicket });
     } catch (error: unknown) {
       console.error('Error fetching ticket:', error);
@@ -149,23 +111,21 @@ export const getTicketById = async (req: Request, res: Response) => {
 
 // Create a new ticket
 export const createTicket = async (req: Request, res: Response) => {
-  res.header('Cache-Control', 'no-store');
+  (res as any).header('Cache-Control', 'no-store');
   try {
     let attachment = undefined;
     if (req.file) {
       try {
-        console.log('Upload:', req.file.originalname, req.file.mimetype, req.file.size, req.file.path);
+        // No Render, o arquivo temporário já está em memória
         attachment = {
-          data: fs.readFileSync(req.file.path),
+          data: req.file.buffer, // Usar o buffer diretamente ao invés de ler do arquivo
           contentType: req.file.mimetype,
           filename: req.file.originalname,
         };
         console.log('Attachment buffer length:', attachment.data.length, 'Content-Type:', attachment.contentType);
-      } finally {
-        // Limpar o arquivo temporário
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
+      } catch (error) {
+        console.error('Error processing attachment:', error);
+        throw error;
       }
     }
 
@@ -206,8 +166,9 @@ export const createTicket = async (req: Request, res: Response) => {
       ticket: newTicket
     });
   } catch (error: unknown) {
+    console.error('Error creating ticket:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    res.status(500).json({ message: 'Erro ao criar ticket' });
+    res.status(500).json({ message: 'Erro ao criar ticket', error: errorMessage });
   }
 };
 
@@ -292,37 +253,45 @@ export const addComment = async (req: Request, res: Response) => {
   }
 };
 
-// Endpoint para servir o anexo (imagem) diretamente do MongoDB
+// Get ticket attachment
 export const getTicketAttachment = async (req: Request, res: Response) => {
-  res.header('Cache-Control', 'no-store');
   try {
-    const ticketId = req.params.id;
-    const ticket = await TicketModel.findById(ticketId).lean().exec();
-    
-    if (!ticket || !ticket.attachment || !ticket.attachment.data) {
-      return res.status(404).send('Anexo não encontrado');
-    }
-
-    // @ts-ignore - Adicionado pelo middleware de autenticação
+    const { id } = req.params;
+    // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
-    // @ts-ignore - Adicionado pelo middleware de autenticação
+    // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
-    // Verificar se o usuário tem permissão para acessar o anexo
-    if (userRole === 'user' && ticket.userId !== userId) {
-      return res.status(403).send('Acesso negado');
+    if (!userRole) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    // Configurar os headers para o download do arquivo
-    res.setHeader('Content-Type', ticket.attachment.contentType);
-    res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
+    try {
+      const query = userRole === 'admin' ? { _id: id } : { _id: id, userId };
+      const ticket = await TicketModel.findOne(query)
+        .select('attachment userId')
+        .lean()
+        .exec();
 
-    // Enviar o arquivo
-    res.send(ticket.attachment.data);
+      if (!ticket || !ticket.attachment) {
+        return res.status(404).json({ message: 'Anexo não encontrado' });
+      }
+
+      // Set proper headers
+      res.setHeader('Content-Type', ticket.attachment.contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+
+      // Send the buffer
+      res.send(ticket.attachment.data);
+    } catch (error: unknown) {
+      console.error('Error fetching attachment:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      res.status(500).json({ message: 'Erro ao buscar anexo', error: errorMessage });
+    }
   } catch (error: unknown) {
-    console.error('Erro ao servir anexo:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao servir anexo';
-    res.status(500).send(errorMessage);
+    console.error('Error in getTicketAttachment:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao recuperar anexo' });
   }
 };
