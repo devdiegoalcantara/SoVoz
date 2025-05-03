@@ -22,7 +22,7 @@ const ticketFormSchema = z.object({
   type: z.string().min(1, "Selecione um tipo"),
   department: z.string().min(1, "Nome do órgão é obrigatório"),
   submitterName: z.string().optional(),
-  submitterEmail: z.string().email("Email inválido").optional(),
+  submitterEmail: z.string().email("Email inválido").or(z.literal("")).optional(),
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
