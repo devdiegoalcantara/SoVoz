@@ -282,13 +282,8 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
       res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
 
-      // Ensure the buffer is properly converted to a Buffer if it's not already
-      const imageBuffer = Buffer.isBuffer(ticket.attachment.data) 
-        ? ticket.attachment.data 
-        : Buffer.from(ticket.attachment.data);
-
       // Send the buffer
-      res.send(imageBuffer);
+      res.send(ticket.attachment.data);
     } catch (error: unknown) {
       console.error('Error fetching attachment:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
