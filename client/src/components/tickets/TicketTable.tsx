@@ -18,7 +18,11 @@ type FilterOptions = {
   status: string;
 };
 
-export default function TicketTable() {
+type TicketTableProps = {
+  searchQuery: string;
+};
+
+export default function TicketTable({ searchQuery }: TicketTableProps) {
   const [, setLocation] = useLocation();
   const [filters, setFilters] = useState<FilterOptions>({
     type: "",
@@ -26,7 +30,6 @@ export default function TicketTable() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch tickets
   const { data, isLoading, error } = useQuery({
