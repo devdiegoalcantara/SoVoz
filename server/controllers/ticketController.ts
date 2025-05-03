@@ -13,6 +13,9 @@ export const getAllTickets = async (req: Request, res: Response) => {
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
+    console.log('User role:', userRole);
+    console.log('User ID:', userId);
+
     if (!userRole) {
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
@@ -21,15 +24,19 @@ export const getAllTickets = async (req: Request, res: Response) => {
     try {
       if (userRole === 'admin') {
         tickets = await storage.getAllTickets();
+        console.log('Admin tickets:', tickets);
       } else if (userId) {
         tickets = await storage.getTicketsByUser(userId);
+        console.log('User tickets:', tickets);
       }
       res.json({ tickets: tickets || [] });
     } catch (error: unknown) {
+      console.error('Error fetching tickets:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({ message: 'Erro ao buscar tickets', error: errorMessage });
     }
   } catch (error: unknown) {
+    console.error('Error in getAllTickets:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar tickets' });
   }

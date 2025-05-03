@@ -32,21 +32,29 @@ export default function TicketTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["/api/tickets"],
     queryFn: async () => {
+      const token = localStorage.getItem('token');
+      console.log('Token:', token);
+      
       const response = await fetch("/api/tickets", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response data:', result);
+      
       if (!response.ok) {
         throw new Error('Erro ao carregar tickets');
       }
-      const result = await response.json();
       return { tickets: (result.tickets || []).map((t: any) => ({ ...t, id: t.id || t._id })) };
     }
   });
 
   // Filter and search tickets
   const filteredTickets = data?.tickets.filter((ticket: Ticket) => {
+    console.log('Filtering ticket:', ticket);
     const matchesType = filters.type ? ticket.type === filters.type : true;
     const matchesStatus = filters.status ? ticket.status === filters.status : true;
     const matchesSearch = searchQuery
