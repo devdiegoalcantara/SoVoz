@@ -273,24 +273,28 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
         .lean()
         .exec();
 
-      if (!ticket || !ticket.attachment) {
+      if (!ticket?.attachment?.data) {
         return res.status(404).json({ message: 'Anexo não encontrado' });
       }
 
-      // Set proper headers
-      res.setHeader('Content-Type', ticket.attachment.contentType || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      // Converter os dados para Buffer
+      const bufferData = Buffer.from(ticket.attachment.data.toString('base64'), 'base64');
 
-      // Send the buffer
-      res.send(ticket.attachment.data);
+      // Configurar os headers corretamente
+      res.setHeader('Content-Type', ticket.attachment.contentType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(ticket.attachment.filename || 'attachment')}"`);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
+      res.setHeader('Content-Length', bufferData.length);
+
+      // Enviar o buffer
+      res.end(bufferData);
     } catch (error: unknown) {
-      console.error('Error fetching attachment:', error);
+      console.error('Erro ao buscar anexo:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({ message: 'Erro ao buscar anexo', error: errorMessage });
     }
   } catch (error: unknown) {
-    console.error('Error in getTicketAttachment:', error);
+    console.error('Erro em getTicketAttachment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar anexo' });
   }
