@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 
 type Ticket = {
-  id: number;
+  id: string;
   title: string;
   type: string;
   department: string;
@@ -41,7 +41,7 @@ export default function TicketTable() {
         throw new Error('Erro ao carregar tickets');
       }
       const result = await response.json();
-      return { tickets: result.tickets || [] };
+      return { tickets: (result.tickets || []).map((t: any) => ({ ...t, id: t.id || t._id })) };
     }
   });
 
@@ -64,12 +64,12 @@ export default function TicketTable() {
   const displayedTickets = filteredTickets.slice(startIndex, endIndex);
 
   // Handle view ticket
-  const handleViewTicket = (id: number) => {
+  const handleViewTicket = (id: string) => {
     setLocation(`/ticket/${id}`);
   };
 
   // Handle edit ticket
-  const handleEditTicket = (id: number) => {
+  const handleEditTicket = (id: string) => {
     setLocation(`/ticket/${id}`);
   };
 
@@ -176,25 +176,22 @@ export default function TicketTable() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Sequencial</th> {/*Updated header*/}
+            <thead className="bg-gray-50"><tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Sequencial</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Órgão</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {displayedTickets.map((ticket) => {
+              </tr></thead>
+            <tbody className="bg-white divide-y divide-gray-200">{displayedTickets.map((ticket: Ticket) => {
                 const typeBadge = getTypeBadge(ticket.type);
 
                 return (
                   <tr key={ticket.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {ticket.sequentialId ? `#${ticket.sequentialId}` : `#${startIndex + displayedTickets.indexOf(ticket) + 1}`} {/* Display sequential ID if available */}
+                      {ticket.sequentialId ? `#${ticket.sequentialId}` : `#${startIndex + displayedTickets.indexOf(ticket) + 1}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ticket.title}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -236,8 +233,7 @@ export default function TicketTable() {
                     Nenhum ticket encontrado
                   </td>
                 </tr>
-              )}
-            </tbody>
+              )}</tbody>
           </table>
         </div>
 

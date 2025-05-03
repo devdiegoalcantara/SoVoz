@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { storage } from '../mongo-storage';
-import { InsertTicket } from '../mongo-storage';
+import { InsertTicket, Ticket } from '../mongo-storage';
 import { TicketModel } from '../mongodb';
+import fs from 'fs';
+import path from 'path';
 
 // Get all tickets
 export const getAllTickets = async (req: Request, res: Response) => {
@@ -15,21 +17,20 @@ export const getAllTickets = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
 
-    let tickets = [];
+    let tickets: Ticket[] = [];
     try {
       if (userRole === 'admin') {
         tickets = await storage.getAllTickets();
       } else if (userId) {
         tickets = await storage.getTicketsByUser(userId);
       }
-      console.log('Tickets encontrados:', tickets);
       res.json({ tickets: tickets || [] });
-    } catch (error) {
-      console.error('Erro ao buscar tickets:', error);
-      res.status(500).json({ message: 'Erro ao buscar tickets', error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      res.status(500).json({ message: 'Erro ao buscar tickets', error: errorMessage });
     }
-  } catch (error) {
-    console.error('Get all tickets error:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar tickets' });
   }
 };
@@ -41,7 +42,7 @@ export const getTicketById = async (req: Request, res: Response) => {
     const ticket = await storage.getTicket(ticketId);
 
     if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
+      return res.status(404).json({ message: 'Ticket não encontrado' });
     }
 
     // @ts-ignore - Added by auth middleware
@@ -49,24 +50,35 @@ export const getTicketById = async (req: Request, res: Response) => {
     // @ts-ignore - Added by auth middleware
     const userId = req.user?.id;
 
-    // Regular users can only see their own tickets
+    // Usuários comuns só podem ver seus próprios tickets
     if (userRole === 'user' && ticket.userId !== userId) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Acesso negado' });
     }
 
     res.json({ ticket });
-  } catch (error) {
-    console.error('Get ticket by ID error:', error);
-    res.status(500).json({ message: 'Server error retrieving ticket' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao recuperar ticket' });
   }
 };
 
 // Create a new ticket
 export const createTicket = async (req: Request, res: Response) => {
   try {
-    let attachmentPath = null;
+    let attachment = undefined;
     if (req.file) {
-      attachmentPath = req.file.path;
+      try {
+        attachment = {
+          data: fs.readFileSync(req.file.path),
+          contentType: req.file.mimetype,
+          filename: req.file.originalname,
+        };
+      } finally {
+        // Limpar o arquivo temporário
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      }
     }
 
     // Get the highest sequential ID
@@ -86,7 +98,7 @@ export const createTicket = async (req: Request, res: Response) => {
       });
     }
 
-    const ticketData = {
+    const ticketData: InsertTicket = {
       sequentialId: nextSequentialId,
       title: req.body.title,
       description: req.body.description,
@@ -96,18 +108,18 @@ export const createTicket = async (req: Request, res: Response) => {
       submitterName: req.body.submitterName || null,
       submitterEmail: req.body.submitterEmail || null,
       userId: userId || null,
-      attachmentPath: attachmentPath || null
+      attachment: attachment || undefined
     };
 
     const newTicket = await storage.createTicket(ticketData);
 
     res.status(201).json({
-      message: 'Ticket created successfully',
+      message: 'Ticket criado com sucesso',
       ticket: newTicket
     });
-  } catch (error) {
-    console.error('Create ticket error:', error);
-    res.status(500).json({ message: 'Server error creating ticket' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao criar ticket' });
   }
 };
 
@@ -118,22 +130,22 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
     const { status } = req.body;
 
     if (!status || !['Novo', 'Em andamento', 'Resolvido'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+      return res.status(400).json({ message: 'Status inválido' });
     }
 
     const updatedTicket = await storage.updateTicketStatus(ticketId, status);
 
     if (!updatedTicket) {
-      return res.status(404).json({ message: 'Ticket not found' });
+      return res.status(404).json({ message: 'Ticket não encontrado' });
     }
 
     res.json({
-      message: 'Ticket status updated successfully',
+      message: 'Status do ticket atualizado com sucesso',
       ticket: updatedTicket
     });
-  } catch (error) {
-    console.error('Update ticket status error:', error);
-    res.status(500).json({ message: 'Server error updating ticket status' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao atualizar status do ticket' });
   }
 };
 
@@ -158,8 +170,63 @@ export const getTicketStatistics = async (_req: Request, res: Response) => {
       statusStats,
       departmentStats
     });
-  } catch (error) {
-    console.error('Get ticket statistics error:', error);
-    res.status(500).json({ message: 'Server error retrieving ticket statistics' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao recuperar estatísticas' });
+  }
+};
+
+// Adicionar comentário ao ticket
+export const addComment = async (req: Request, res: Response) => {
+  try {
+    const ticketId = req.params.id;
+    const { author, text } = req.body;
+    if (!text) return res.status(400).json({ message: 'Comentário vazio' });
+
+    const comment = { author, text, createdAt: new Date() };
+    const ticket = await TicketModel.findByIdAndUpdate(
+      ticketId,
+      { $push: { comments: comment } },
+      { new: true }
+    );
+    if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado' });
+    res.json({ comments: ticket.comments });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao adicionar comentário' });
+  }
+};
+
+// Endpoint para servir o anexo (imagem) diretamente do MongoDB
+export const getTicketAttachment = async (req: Request, res: Response) => {
+  try {
+    const ticketId = req.params.id;
+    const ticket = await TicketModel.findById(ticketId);
+    
+    if (!ticket || !ticket.attachment || !ticket.attachment.data) {
+      return res.status(404).send('Anexo não encontrado');
+    }
+
+    // @ts-ignore - Adicionado pelo middleware de autenticação
+    const userRole = req.user?.role;
+    // @ts-ignore - Adicionado pelo middleware de autenticação
+    const userId = req.user?.id;
+
+    // Verificar se o usuário tem permissão para acessar o anexo
+    if (userRole === 'user' && ticket.userId !== userId) {
+      return res.status(403).send('Acesso negado');
+    }
+
+    // Configurar os headers para o download do arquivo
+    res.setHeader('Content-Type', ticket.attachment.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${ticket.attachment.filename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
+
+    // Enviar o arquivo
+    res.send(ticket.attachment.data);
+  } catch (error: unknown) {
+    console.error('Erro ao servir anexo:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao servir anexo';
+    res.status(500).send(errorMessage);
   }
 };

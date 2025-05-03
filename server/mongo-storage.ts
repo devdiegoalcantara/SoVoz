@@ -1,8 +1,6 @@
 import { Types } from 'mongoose';
 import { UserModel, TicketModel, connectToDatabase, isConnected } from './mongodb';
 import bcrypt from 'bcryptjs';
-// Import only when needed to avoid circular dependency
-let memStorage: any;
 
 // Definindo interfaces para representar os documentos do MongoDB
 export interface User {
@@ -22,6 +20,7 @@ export interface InsertUser {
 
 export interface Ticket {
   id: string;
+  sequentialId: number;
   title: string;
   description: string;
   type: string;
@@ -30,11 +29,21 @@ export interface Ticket {
   submitterName: string | null;
   submitterEmail: string | null;
   userId: string | null;
-  attachmentPath: string | null;
+  attachment: {
+    data: Buffer;
+    contentType: string;
+    filename: string;
+  } | null;
   createdAt: Date;
+  comments: Array<{
+    author: string;
+    text: string;
+    createdAt: Date;
+  }>;
 }
 
 export interface InsertTicket {
+  sequentialId: number;
   title: string;
   description: string;
   type: string;
@@ -43,7 +52,11 @@ export interface InsertTicket {
   submitterName?: string | null;
   submitterEmail?: string | null;
   userId?: string | null;
-  attachmentPath?: string | null;
+  attachment?: {
+    data: Buffer;
+    contentType: string;
+    filename: string;
+  } | null;
 }
 
 export interface IStorage {
@@ -69,28 +82,11 @@ export interface IStorage {
 
 export class MongoDBStorage implements IStorage {
   constructor() {
-    // Lazy import to avoid circular dependency
-    if (!memStorage) {
-      try {
-        // Use dynamic import for ES modules
-        import('./storage').then(module => {
-          memStorage = module.storage;
-        }).catch(error => {
-          console.error('Erro ao importar armazenamento em memória:', error);
-        });
-      } catch (error) {
-        console.error('Erro ao importar armazenamento em memória:', error);
-      }
-    }
-
-    // Conectar ao MongoDB quando o armazenamento for inicializado
     this.initializeDatabase();
   }
 
   private async initializeDatabase() {
     try {
-      await connectToDatabase();
-
       // Verifica se já existe um usuário administrador
       const adminExists = await UserModel.findOne({ email: 'admin@example.com' });
 
@@ -102,10 +98,9 @@ export class MongoDBStorage implements IStorage {
           password: await bcrypt.hash('admin123', 10),
           role: 'admin'
         });
-        console.log('Administrador padrão criado com sucesso!');
       }
     } catch (error) {
-      console.error('Falha na inicialização do banco de dados:', error);
+      throw error;
     }
   }
 
@@ -124,6 +119,7 @@ export class MongoDBStorage implements IStorage {
   private mapTicketDocument(doc: any): Ticket {
     return {
       id: doc._id.toString(),
+      sequentialId: doc.sequentialId,
       title: doc.title,
       description: doc.description,
       type: doc.type,
@@ -132,308 +128,148 @@ export class MongoDBStorage implements IStorage {
       submitterName: doc.submitterName || null,
       submitterEmail: doc.submitterEmail || null,
       userId: doc.userId ? doc.userId.toString() : null,
-      attachmentPath: doc.attachmentPath || null,
-      createdAt: doc.createdAt
+      attachment: doc.attachment && doc.attachment.data ? {
+        data: doc.attachment.data,
+        contentType: doc.attachment.contentType,
+        filename: doc.attachment.filename
+      } : null,
+      createdAt: doc.createdAt,
+      comments: doc.comments || []
     };
   }
 
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getUser(parseInt(id));
-    }
     try {
       const user = await UserModel.findById(id);
       return user ? this.mapUserDocument(user) : undefined;
     } catch (error) {
-      console.error('Erro ao buscar usuário:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getUser(parseInt(id));
+      throw error;
     }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getUserByEmail(email);
-    }
     try {
       const user = await UserModel.findOne({ email });
       return user ? this.mapUserDocument(user) : undefined;
     } catch (error) {
-      console.error('Erro ao buscar usuário por email:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getUserByEmail(email);
+      throw error;
     }
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.createUser(userData);
-    }
     try {
       const user = new UserModel(userData);
       await user.save();
       return this.mapUserDocument(user);
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.createUser(userData);
+      throw error;
     }
   }
 
   // Ticket operations
   async getTicket(id: string): Promise<Ticket | undefined> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getTicket(parseInt(id));
-    }
     try {
       const ticket = await TicketModel.findById(id);
       return ticket ? this.mapTicketDocument(ticket) : undefined;
     } catch (error) {
-      console.error('Erro ao buscar ticket:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getTicket(parseInt(id));
+      throw error;
     }
   }
 
   async getAllTickets(): Promise<Ticket[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getAllTickets();
-    }
     try {
-      const tickets = await TicketModel.find().sort({ createdAt: -1 });
-      return tickets.map(ticket => this.mapTicketDocument(ticket));
+      const tickets = await TicketModel.find();
+      return tickets.map(this.mapTicketDocument);
     } catch (error) {
-      console.error('Erro ao buscar todos os tickets:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getAllTickets();
+      throw error;
     }
   }
 
   async getTicketsByUser(userId: string): Promise<Ticket[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getTicketsByUser(parseInt(userId));
-    }
     try {
-      const tickets = await TicketModel.find({ userId: new Types.ObjectId(userId) });
-      return tickets.map(ticket => this.mapTicketDocument(ticket));
+      const tickets = await TicketModel.find({ userId });
+      return tickets.map(this.mapTicketDocument);
     } catch (error) {
-      console.error('Erro ao buscar tickets do usuário:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.getTicketsByUser(parseInt(userId));
+      throw error;
     }
   }
 
   async getTicketsByStatus(status: string): Promise<Ticket[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      return memStorage.getTicketsByStatus(status);
-    }
     try {
       const tickets = await TicketModel.find({ status });
-      return tickets.map(ticket => this.mapTicketDocument(ticket));
+      return tickets.map(this.mapTicketDocument);
     } catch (error) {
-      console.error('Erro ao buscar tickets por status:', error);
-      return memStorage.getTicketsByStatus(status);
+      throw error;
     }
   }
 
   async getTicketsByType(type: string): Promise<Ticket[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      return memStorage.getTicketsByType(type);
-    }
     try {
       const tickets = await TicketModel.find({ type });
-      return tickets.map(ticket => this.mapTicketDocument(ticket));
+      return tickets.map(this.mapTicketDocument);
     } catch (error) {
-      console.error('Erro ao buscar tickets por tipo:', error);
-      return memStorage.getTicketsByType(type);
+      throw error;
     }
   }
 
   async createTicket(ticketData: InsertTicket): Promise<Ticket> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.createTicket(ticketData);
-    }
     try {
-      // Converter o userId para ObjectId se existir
-      if (ticketData.userId) {
-        ticketData.userId = new Types.ObjectId(ticketData.userId) as unknown as string;
-      }
-
-      const ticket = new TicketModel({
-        ...ticketData,
-        createdAt: new Date()
-      });
-
+      const ticket = new TicketModel(ticketData);
       await ticket.save();
       return this.mapTicketDocument(ticket);
     } catch (error) {
-      console.error('Erro ao criar ticket:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.createTicket(ticketData);
+      throw error;
     }
   }
 
   async updateTicketStatus(id: string, status: string): Promise<Ticket | undefined> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.updateTicketStatus(parseInt(id), status);
-    }
     try {
-      const updatedTicket = await TicketModel.findByIdAndUpdate(
+      const ticket = await TicketModel.findByIdAndUpdate(
         id,
         { status },
         { new: true }
       );
-
-      return updatedTicket ? this.mapTicketDocument(updatedTicket) : undefined;
+      return ticket ? this.mapTicketDocument(ticket) : undefined;
     } catch (error) {
-      console.error('Erro ao atualizar status do ticket:', error);
-      // @ts-ignore - Tipos diferentes, mas funcionalmente compatíveis
-      return memStorage.updateTicketStatus(parseInt(id), status);
+      throw error;
     }
   }
 
   // Statistics
   async getTicketCountByType(): Promise<{ type: string; count: number }[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      return memStorage.getTicketCountByType();
-    }
     try {
       const result = await TicketModel.aggregate([
-        { $group: { _id: "$type", count: { $sum: 1 } } },
-        { $project: { _id: 0, type: "$_id", count: 1 } }
+        { $group: { _id: '$type', count: { $sum: 1 } } }
       ]);
-
-      return result;
+      return result.map(item => ({ type: item._id, count: item.count }));
     } catch (error) {
-      console.error('Erro ao buscar contagem de tickets por tipo:', error);
-      return memStorage.getTicketCountByType();
+      throw error;
     }
   }
 
   async getTicketCountByStatus(): Promise<{ status: string; count: number }[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      return memStorage.getTicketCountByStatus();
-    }
     try {
       const result = await TicketModel.aggregate([
-        { $group: { _id: "$status", count: { $sum: 1 } } },
-        { $project: { _id: 0, status: "$_id", count: 1 } }
+        { $group: { _id: '$status', count: { $sum: 1 } } }
       ]);
-
-      return result;
+      return result.map(item => ({ status: item._id, count: item.count }));
     } catch (error) {
-      console.error('Erro ao buscar contagem de tickets por status:', error);
-      return memStorage.getTicketCountByStatus();
+      throw error;
     }
   }
 
   async getMostCitedDepartments(): Promise<{ department: string; count: number }[]> {
-    if (!isConnected) {
-      console.log('MongoDB não conectado, usando armazenamento em memória');
-      return memStorage.getMostCitedDepartments();
-    }
     try {
       const result = await TicketModel.aggregate([
-        { $group: { _id: "$department", count: { $sum: 1 } } },
-        { $project: { _id: 0, department: "$_id", count: 1 } },
-        { $sort: { count: -1 } },
-        { $limit: 6 }
+        { $group: { _id: '$department', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
       ]);
-
-      return result;
+      return result.map(item => ({ department: item._id, count: item.count }));
     } catch (error) {
-      console.error('Erro ao buscar departamentos mais citados:', error);
-      return memStorage.getMostCitedDepartments();
+      throw error;
     }
   }
 }
 
-// Get ticket count by type
-export const getTicketCountByType = async () => {
-  const typeStats = await TicketModel.aggregate([
-    {
-      $group: {
-        _id: "$type",
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $project: {
-        _id: 0,
-        type: "$_id",
-        count: 1
-      }
-    }
-  ]);
-  return typeStats;
-};
-
-// Get ticket count by status
-export const getTicketCountByStatus = async () => {
-  const statusStats = await TicketModel.aggregate([
-    {
-      $group: {
-        _id: "$status",
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $project: {
-        _id: 0,
-        status: "$_id",
-        count: 1
-      }
-    }
-  ]);
-  return statusStats;
-};
-
-// Get most cited departments
-export const getMostCitedDepartments = async () => {
-  const departmentStats = await TicketModel.aggregate([
-    {
-      $group: {
-        _id: "$department",
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $project: {
-        _id: 0,
-        department: "$_id",
-        count: 1
-      }
-    },
-    {
-      $sort: { count: -1 }
-    },
-    {
-      $limit: 10
-    }
-  ]);
-  return departmentStats;
-};
-
-// Inicialize o armazenamento com a classe do MongoDB
 export const storage = new MongoDBStorage();

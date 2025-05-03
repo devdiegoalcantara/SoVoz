@@ -24,8 +24,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ticket routes
   apiRouter.get('/tickets', verifyToken, ticketController.getAllTickets);
   apiRouter.get('/tickets/:id', verifyToken, ticketController.getTicketById);
+  apiRouter.get('/tickets/:id/attachment', verifyToken, ticketController.getTicketAttachment);
   apiRouter.post('/tickets', upload.single('attachment'), ticketController.createTicket);
   apiRouter.patch('/tickets/:id/status', verifyToken, isAdmin, ticketController.updateTicketStatus);
+  apiRouter.post('/tickets/:id/comments', verifyToken, ticketController.addComment);
 
   // Statistics routes
   apiRouter.get('/statistics', verifyToken, isAdmin, ticketController.getTicketStatistics);

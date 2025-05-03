@@ -60,10 +60,10 @@ export const register = async (req: Request, res: Response) => {
         role: newUser.role
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Register error:', error);
-    res.status(500).json({ message: error.message || 'Erro no servidor durante o registro' });
-    console.error('Erro detalhado:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro no servidor durante o registro';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -126,9 +126,10 @@ export const login = async (req: Request, res: Response) => {
         role: user.role
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    const errorMessage = error instanceof Error ? error.message : 'Server error during login';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -154,8 +155,9 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         role: user.role
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Get current user error:', error);
-    res.status(500).json({ message: 'Server error getting user information' });
+    const errorMessage = error instanceof Error ? error.message : 'Server error getting user information';
+    res.status(500).json({ message: errorMessage });
   }
 };

@@ -17,7 +17,6 @@ export default function Sidebar() {
     { href: "/dashboard", label: "Dashboard", icon: "fas fa-chart-line", adminOnly: true },
     { href: "/tickets", label: "Tickets", icon: "fas fa-ticket-alt", adminOnly: false },
     { href: "/kanban", label: "Kanban", icon: "fas fa-columns", adminOnly: true },
-    { href: "/statistics", label: "Estatísticas", icon: "fas fa-chart-pie", adminOnly: true },
   ];
 
   // Filter nav items based on user role

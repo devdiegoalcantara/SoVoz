@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import 'dotenv/config';
 
 // URL de conexão do MongoDB via variável de ambiente
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -66,8 +67,17 @@ const ticketSchema = new mongoose.Schema({
   submitterName: { type: String },
   submitterEmail: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  attachmentPath: { type: String },
-  createdAt: { type: Date, default: Date.now }
+  attachment: {
+    data: Buffer,
+    contentType: String,
+    filename: String,
+  },
+  createdAt: { type: Date, default: Date.now },
+  comments: [{
+    author: String,
+    text: String,
+    createdAt: { type: Date, default: Date.now }
+  }]
 });
 
 // Criar modelos do Mongoose

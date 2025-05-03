@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -15,24 +15,40 @@ interface TicketDetailProps {
 }
 
 export default function TicketDetail({ ticketId }: TicketDetailProps) {
+  console.log("TicketDetail - ticketId recebido:", ticketId);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [comentario, setComentario] = useState("");
+  const [comentarioLoading, setComentarioLoading] = useState(false);
+  const [comentarioErro, setComentarioErro] = useState("");
+  const imgRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch ticket details using the original ID
   const { data, isLoading, error } = useQuery<{ ticket: any }>({
     queryKey: [`/api/tickets/${ticketId}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/tickets/${ticketId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao carregar ticket');
+      }
+      return response.json();
+    }
   });
 
   // Update ticket status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status }: { status: string }) => {
-      const response = await apiRequest("PATCH", `/api/tickets/${id}/status`, { status });
-      return response.json();
+      return await apiRequest("PATCH", `/api/tickets/${ticketId}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/tickets/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
       toast({
         title: "Status atualizado",
@@ -61,6 +77,39 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
     await updateStatusMutation.mutateAsync({ status: selectedStatus });
   };
 
+  // Função para enviar comentário integrado ao backend
+  const handleEnviarComentario = async () => {
+    setComentarioLoading(true);
+    setComentarioErro("");
+    try {
+      const response = await fetch(`/api/tickets/${ticketId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ author: user?.name || "Usuário", text: comentario })
+      });
+      if (!response.ok) throw new Error("Erro ao enviar comentário");
+      // Buscar ticket atualizado do backend
+      const updatedTicketRes = await fetch(`/api/tickets/${ticketId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (updatedTicketRes.ok && data) {
+        const updatedTicketData = await updatedTicketRes.json();
+        data.ticket.comments = updatedTicketData.ticket.comments;
+      }
+      await queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
+      setComentario("");
+    } catch (err) {
+      setComentarioErro("Erro ao enviar comentário");
+    } finally {
+      setComentarioLoading(false);
+    }
+  };
+
   // Format date
   const formatDate = (dateString: string) => {
     try {
@@ -69,6 +118,32 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
       return "Data inválida";
     }
   };
+
+  useEffect(() => {
+    if (data && data.ticket.attachment) {
+      const loadAttachment = async () => {
+        try {
+          const response = await fetch(`/api/tickets/${ticketId}/attachment`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          
+          if (data.ticket.attachment.contentType?.startsWith('image/') && imgRef.current) {
+            imgRef.current.src = url;
+          } else if (data.ticket.attachment.contentType === 'video/mp4' && videoRef.current) {
+            videoRef.current.src = url;
+          }
+        } catch (error) {
+          console.error('Erro ao carregar anexo:', error);
+        }
+      };
+
+      loadAttachment();
+    }
+  }, [data, ticketId]);
 
   if (isLoading) {
     return (
@@ -100,10 +175,12 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
     );
   }
 
+  if (!data) return null;
   const ticket = data.ticket;
-  const attachmentFilename = ticket.attachmentPath ? ticket.attachmentPath.split('/').pop() : null;
-  const attachmentIsImage = attachmentFilename?.match(/\.(jpg|jpeg|png)$/i);
-  const attachmentIsVideo = attachmentFilename?.match(/\.(mp4)$/i);
+  const token = localStorage.getItem('token');
+  const attachmentUrl = `/api/tickets/${ticketId}/attachment`;
+  const attachmentIsImage = ticket.attachment && ticket.attachment.contentType?.startsWith('image/');
+  const attachmentIsVideo = ticket.attachment && ticket.attachment.contentType === 'video/mp4';
 
   return (
     <div>
@@ -146,30 +223,27 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
                 <p className="text-gray-700 whitespace-pre-line">{ticket.description}</p>
               </div>
               
-              {attachmentFilename && (
+              {ticket.attachment && (
                 <div className="mt-6 border-t pt-4">
                   <h3 className="text-sm font-medium text-gray-500 mb-2">Anexo</h3>
-                  
                   {attachmentIsImage && (
                     <div className="mt-2">
                       <img 
-                        src={`/uploads/${attachmentFilename}`} 
+                        ref={imgRef}
                         alt="Anexo" 
                         className="max-w-full max-h-96 rounded-lg"
                       />
                     </div>
                   )}
-                  
                   {attachmentIsVideo && (
                     <div className="mt-2">
                       <video 
-                        src={`/uploads/${attachmentFilename}`} 
+                        ref={videoRef}
                         controls 
                         className="max-w-full max-h-96 rounded-lg"
                       />
                     </div>
                   )}
-                  
                   <div className="bg-gray-100 rounded-lg p-2 inline-block mt-2">
                     <div className="flex items-center space-x-2">
                       <i className={`${
@@ -177,11 +251,27 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
                         attachmentIsVideo ? "fas fa-video" :
                         "fas fa-file"
                       } text-gray-500`}></i>
-                      <span className="text-sm text-gray-700">{attachmentFilename}</span>
+                      <span className="text-sm text-gray-700">{ticket.attachment.filename}</span>
                       <a 
-                        href={`/uploads/${attachmentFilename}`} 
+                        href="#" 
                         target="_blank" 
                         className="text-primary hover:text-primary-dark text-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          fetch(attachmentUrl, {
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          })
+                            .then(response => response.blob())
+                            .then(blob => {
+                              const url = URL.createObjectURL(blob);
+                              window.open(url, '_blank');
+                            })
+                            .catch(error => {
+                              console.error('Erro ao carregar anexo:', error);
+                            });
+                        }}
                       >
                         Visualizar
                       </a>
@@ -273,6 +363,40 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
                   </Button>
                 </div>
               )}
+              {/* Comentários reais */}
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Comentários</h3>
+                {ticket.comments && ticket.comments.length > 0 ? (
+                  <div className="space-y-2">
+                    {ticket.comments.map((c: any, idx: number) => (
+                      <div key={idx} className="bg-gray-100 rounded p-2 text-xs">
+                        <span className="font-semibold">{c.author}:</span> {c.text}
+                        <span className="ml-2 text-gray-400 text-[10px]">{formatDate(c.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">Nenhum comentário ainda</div>
+                )}
+                {/* Campo para adicionar comentário */}
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    className="flex-1 border rounded px-2 py-1 text-xs"
+                    placeholder="Digite seu comentário..."
+                    value={comentario}
+                    onChange={e => setComentario(e.target.value)}
+                    disabled={comentarioLoading}
+                  />
+                  <Button
+                    onClick={handleEnviarComentario}
+                    disabled={!comentario || comentarioLoading}
+                  >
+                    {comentarioLoading ? <i className="fas fa-spinner fa-spin"></i> : "Enviar"}
+                  </Button>
+                </div>
+                {comentarioErro && <div className="text-red-600 text-xs mt-1">{comentarioErro}</div>}
+              </div>
             </CardContent>
           </Card>
         </div>

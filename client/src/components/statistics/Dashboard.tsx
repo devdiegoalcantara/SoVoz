@@ -27,6 +27,17 @@ export default function Dashboard() {
   // Fetch statistics
   const { data, isLoading, error } = useQuery<StatisticsData>({
     queryKey: ["/api/statistics"],
+    queryFn: async () => {
+      const response = await fetch("/api/statistics", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao carregar estatísticas');
+      }
+      return response.json();
+    }
   });
 
   const typeColors = {
