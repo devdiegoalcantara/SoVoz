@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { storage } from '../mongo-storage';
+import { storage } from '../mongo-storage.js';
 
 // JWT secret key
 const JWT_SECRET = process.env.JWT_SECRET || 'sovoz-secret-key';
