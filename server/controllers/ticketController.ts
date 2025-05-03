@@ -113,20 +113,21 @@ export const getTicketById = async (req: Request, res: Response) => {
 export const createTicket = async (req: Request, res: Response) => {
   (res as any).header('Cache-Control', 'no-store');
   try {
-    let attachment = undefined;
-    if (req.file) {
-      try {
-        // No Render, o arquivo temporário já está em memória
-        attachment = {
-          data: req.file.buffer, // Usar o buffer diretamente ao invés de ler do arquivo
-          contentType: req.file.mimetype,
-          filename: req.file.originalname,
-        };
-        // console.log('Attachment buffer length:', attachment.data.length, 'Content-Type:', attachment.contentType);
-      } catch (error) {
-        console.error('Error processing attachment:', error);
-        throw error;
-      }
+    let attachments = [];
+    if (req.files && Array.isArray(req.files)) {
+      attachments = req.files.map(file => ({
+        data: file.buffer,
+        contentType: file.mimetype,
+        filename: file.originalname,
+        createdAt: new Date()
+      }));
+    } else if (req.file) {
+      attachments = [{
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+        filename: req.file.originalname,
+        createdAt: new Date()
+      }];
     }
 
     // Get the highest sequential ID
@@ -156,7 +157,7 @@ export const createTicket = async (req: Request, res: Response) => {
       submitterName: req.body.submitterName || null,
       submitterEmail: req.body.submitterEmail || null,
       userId: userId || null,
-      attachment: attachment || undefined
+      attachments: attachments.length > 0 ? attachments : undefined
     };
 
     const newTicket = await TicketModel.create(ticketData);
@@ -256,7 +257,7 @@ export const addComment = async (req: Request, res: Response) => {
 // Get ticket attachment
 export const getTicketAttachment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id, attachmentIndex } = req.params;
     // @ts-ignore - Added by auth middleware
     const userRole = req.user?.role;
     // @ts-ignore - Added by auth middleware
@@ -269,20 +270,22 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
     try {
       const query = userRole === 'admin' ? { _id: id } : { _id: id, userId };
       const ticket = await TicketModel.findOne(query)
-        .select('attachment userId')
+        .select('attachments userId')
         .lean()
         .exec();
 
-      if (!ticket?.attachment?.data) {
+      if (!ticket?.attachments || !ticket.attachments[parseInt(attachmentIndex)]) {
         return res.status(404).json({ message: 'Anexo não encontrado' });
       }
 
+      const attachment = ticket.attachments[parseInt(attachmentIndex)];
+
       // Converter os dados para Buffer
-      const bufferData = Buffer.from(ticket.attachment.data.toString('base64'), 'base64');
+      const bufferData = Buffer.from(attachment.data.toString('base64'), 'base64');
 
       // Configurar os headers corretamente
-      res.setHeader('Content-Type', ticket.attachment.contentType || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(ticket.attachment.filename || 'attachment')}"`);
+      res.setHeader('Content-Type', attachment.contentType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(attachment.filename || 'attachment')}"`);
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
       res.setHeader('Content-Length', bufferData.length);
 

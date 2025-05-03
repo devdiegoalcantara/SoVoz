@@ -31,7 +31,7 @@ export default function TicketForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   
   const form = useForm<TicketFormValues>({
@@ -82,21 +82,24 @@ export default function TicketForm() {
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Check file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      
+      // Verificar tamanho total dos arquivos (máximo 20MB)
+      const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+      if (totalSize > 20 * 1024 * 1024) {
         toast({
-          title: "Arquivo muito grande",
-          description: "O arquivo deve ter no máximo 10MB",
+          title: "Arquivos muito grandes",
+          description: "O tamanho total dos arquivos deve ser no máximo 20MB",
           variant: "destructive",
         });
         return;
       }
       
-      // Check file type
+      // Verificar tipos de arquivo
       const validTypes = ["image/jpeg", "image/png", "video/mp4"];
-      if (!validTypes.includes(file.type)) {
+      const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+      if (invalidFiles.length > 0) {
         toast({
           title: "Tipo de arquivo inválido",
           description: "Apenas JPG, PNG e MP4 são permitidos",
@@ -105,8 +108,12 @@ export default function TicketForm() {
         return;
       }
       
-      setSelectedFile(file);
+      setSelectedFiles(files);
     }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (values: TicketFormValues) => {
@@ -126,9 +133,10 @@ export default function TicketForm() {
         formData.append("submitterEmail", values.submitterEmail);
       }
       
-      if (selectedFile) {
-        formData.append("attachment", selectedFile);
-      }
+      // Adicionar todos os arquivos selecionados
+      selectedFiles.forEach(file => {
+        formData.append("attachments", file);
+      });
       
       await createTicketMutation.mutateAsync(formData);
     } catch (error) {
@@ -144,7 +152,7 @@ export default function TicketForm() {
 
   return (
     <Card>
-      <CardContent className="pt-6 pb-6">
+      <CardContent className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -169,8 +177,8 @@ export default function TicketForm() {
                   <FormItem>
                     <FormLabel>Tipo</FormLabel>
                     <Select
+                      value={field.value}
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -179,8 +187,8 @@ export default function TicketForm() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Bug">Bug</SelectItem>
+                        <SelectItem value="Melhoria">Melhoria</SelectItem>
                         <SelectItem value="Sugestão">Sugestão</SelectItem>
-                        <SelectItem value="Feedback">Feedback</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -236,29 +244,52 @@ export default function TicketForm() {
             />
             
             <div>
-              <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Anexo</FormLabel>
+              <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Anexos</FormLabel>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                 <div className="space-y-1 text-center">
                   <i className="fas fa-cloud-upload-alt mx-auto h-12 w-12 text-gray-400"></i>
                   <div className="flex text-sm text-gray-600">
                     <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
-                      <span>Enviar arquivo</span>
+                      <span>Enviar arquivos</span>
                       <input
                         id="file-upload"
-                        name="attachment"
+                        name="attachments"
                         type="file"
                         className="sr-only"
                         accept=".jpg,.png,.mp4"
+                        multiple
                         onChange={handleFileChange}
                       />
                     </label>
                     <p className="pl-1">ou arraste e solte</p>
                   </div>
-                  <p className="text-xs text-gray-500">JPG, PNG ou MP4 (máx. 10MB)</p>
-                  {selectedFile && (
-                    <p className="text-sm text-green-500 mt-2">
-                      {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </p>
+                  <p className="text-xs text-gray-500">JPG, PNG ou MP4 (máx. 20MB no total)</p>
+                  
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                          <div className="flex items-center space-x-2">
+                            <i className={`${
+                              file.type.startsWith('image/') ? "fas fa-image" :
+                              file.type === 'video/mp4' ? "fas fa-video" :
+                              "fas fa-file"
+                            } text-gray-500`}></i>
+                            <span className="text-sm text-gray-700">{file.name}</span>
+                            <span className="text-xs text-gray-500">
+                              ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

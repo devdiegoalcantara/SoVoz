@@ -11,11 +11,12 @@ const ticketSchema = new mongoose.Schema({
   submitterEmail: { type: String },
   userId: { type: String },
   createdAt: { type: Date, default: Date.now },
-  attachment: {
+  attachments: [{
     data: Buffer,
     contentType: String,
-    filename: String
-  },
+    filename: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
   comments: [{
     author: String,
     text: String,

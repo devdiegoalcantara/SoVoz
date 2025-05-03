@@ -23,8 +23,8 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
   const [comentario, setComentario] = useState("");
   const [comentarioLoading, setComentarioLoading] = useState(false);
   const [comentarioErro, setComentarioErro] = useState("");
-  const imgRef = useRef<HTMLImageElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const imgRefs = useRef<{ [key: number]: HTMLImageElement | null }>({});
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
 
   // Fetch ticket details using the original ID
   const { data, isLoading, error } = useQuery<{ ticket: any }>({
@@ -120,28 +120,30 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
   };
 
   useEffect(() => {
-    if (data && data.ticket.attachment) {
-      const loadAttachment = async () => {
+    if (data && data.ticket.attachments) {
+      const loadAttachments = async () => {
         try {
-          const response = await fetch(`/api/tickets/${ticketId}/attachment`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+          for (let i = 0; i < data.ticket.attachments.length; i++) {
+            const response = await fetch(`/api/tickets/${ticketId}/attachment/${i}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            
+            if (data.ticket.attachments[i].contentType?.startsWith('image/') && imgRefs.current[i]) {
+              imgRefs.current[i]!.src = url;
+            } else if (data.ticket.attachments[i].contentType === 'video/mp4' && videoRefs.current[i]) {
+              videoRefs.current[i]!.src = url;
             }
-          });
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          
-          if (data.ticket.attachment.contentType?.startsWith('image/') && imgRef.current) {
-            imgRef.current.src = url;
-          } else if (data.ticket.attachment.contentType === 'video/mp4' && videoRef.current) {
-            videoRef.current.src = url;
           }
         } catch (error) {
-          console.error('Erro ao carregar anexo:', error);
+          console.error('Erro ao carregar anexos:', error);
         }
       };
 
-      loadAttachment();
+      loadAttachments();
     }
   }, [data, ticketId]);
 
@@ -223,59 +225,50 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
                 <p className="text-gray-700 whitespace-pre-line">{ticket.description}</p>
               </div>
               
-              {ticket.attachment && (
-                <div className="mt-6 border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Anexo</h3>
-                  {attachmentIsImage && (
-                    <div className="mt-2">
-                      <img 
-                        ref={imgRef}
-                        alt="Anexo" 
-                        className="max-w-full max-h-96 rounded-lg"
-                      />
-                    </div>
-                  )}
-                  {attachmentIsVideo && (
-                    <div className="mt-2">
-                      <video 
-                        ref={videoRef}
-                        controls 
-                        className="max-w-full max-h-96 rounded-lg"
-                      />
-                    </div>
-                  )}
-                  <div className="bg-gray-100 rounded-lg p-2 inline-block mt-2">
-                    <div className="flex items-center space-x-2">
-                      <i className={`${
-                        attachmentIsImage ? "fas fa-image" :
-                        attachmentIsVideo ? "fas fa-video" :
-                        "fas fa-file"
-                      } text-gray-500`}></i>
-                      <span className="text-sm text-gray-700">{ticket.attachment.filename}</span>
-                      <a 
-                        href="#" 
-                        target="_blank" 
-                        className="text-primary hover:text-primary-dark text-sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          fetch(attachmentUrl, {
-                            headers: {
-                              'Authorization': `Bearer ${token}`
-                            }
-                          })
-                            .then(response => response.blob())
-                            .then(blob => {
-                              const url = URL.createObjectURL(blob);
-                              window.open(url, '_blank');
-                            })
-                            .catch(error => {
-                              console.error('Erro ao carregar anexo:', error);
-                            });
-                        }}
-                      >
-                        Visualizar
-                      </a>
-                    </div>
+              {data?.ticket.attachments && data.ticket.attachments.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Anexos</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {data.ticket.attachments.map((attachment: any, index: number) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                        {attachment.contentType?.startsWith('image/') && (
+                          <div className="mb-2">
+                            <img 
+                              ref={el => imgRefs.current[index] = el}
+                              className="max-w-full max-h-96 rounded-lg"
+                              alt={attachment.filename}
+                            />
+                          </div>
+                        )}
+                        {attachment.contentType === 'video/mp4' && (
+                          <div className="mb-2">
+                            <video 
+                              ref={el => videoRefs.current[index] = el}
+                              controls 
+                              className="max-w-full max-h-96 rounded-lg"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <i className={`${
+                              attachment.contentType?.startsWith('image/') ? "fas fa-image" :
+                              attachment.contentType === 'video/mp4' ? "fas fa-video" :
+                              "fas fa-file"
+                            } text-gray-500`}></i>
+                            <span className="text-sm text-gray-700">{attachment.filename}</span>
+                          </div>
+                          <a 
+                            href={`/api/tickets/${ticketId}/attachment/${index}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary-dark text-sm"
+                          >
+                            Abrir
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
