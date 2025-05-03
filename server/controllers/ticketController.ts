@@ -36,7 +36,9 @@ export const getAllTickets = async (req: Request, res: Response) => {
           .lean()
           .exec();
       }
-      res.json({ tickets: tickets || [] });
+      // Mapear para garantir o campo id
+      const mappedTickets = (tickets || []).map(t => ({ ...t, id: t._id ? t._id.toString() : t.id }));
+      res.json({ tickets: mappedTickets });
     } catch (error: unknown) {
       console.error('Error fetching tickets:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -70,7 +72,8 @@ export const getTicketById = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Acesso negado' });
     }
 
-    res.json({ ticket });
+    // Garantir campo id
+    res.json({ ticket: { ...ticket, id: ticket._id ? ticket._id.toString() : ticket.id } });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar ticket' });
