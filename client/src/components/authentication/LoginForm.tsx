@@ -47,11 +47,16 @@ export default function LoginForm() {
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="bg-primary p-6 flex justify-center">
           <div className="text-center">
-            <div className="flex justify-center items-center mb-2">
-              <i className="fas fa-comment-dots text-white text-3xl"></i>
-            </div>
-            <h1 className="text-white text-xl font-bold">SoVoz</h1>
-            <p className="text-blue-100 text-sm">Sistema de Atendimento ao SoGov</p>  </div>
+            <Link href="/">
+              <div className="cursor-pointer">
+                <div className="flex justify-center items-center mb-2">
+                  <i className="fas fa-comment-dots text-white text-3xl"></i>
+                </div>
+                <h1 className="text-white text-xl font-bold">SoVoz</h1>
+                <p className="text-blue-100 text-sm">Sistema de Atendimento ao SoGov</p>
+              </div>
+            </Link>
+          </div>
         </div>
         
         <div className="p-6">
