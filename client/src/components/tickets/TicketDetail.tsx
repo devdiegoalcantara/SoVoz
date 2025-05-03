@@ -15,7 +15,7 @@ interface TicketDetailProps {
 }
 
 export default function TicketDetail({ ticketId }: TicketDetailProps) {
-  console.log("TicketDetail - ticketId recebido:", ticketId);
+  // 
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { isAdmin, user } = useAuth();

@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await apiRequest('POST', '/api/auth/login', { email, password });
-      console.log('Login response:', response);
+      // console.log('Login response:', response);
 
       if (response.token) {
         localStorage.setItem('token', response.token);
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
-      console.log('Register response:', response);
+      // console.log('Register response:', response);
       
       if (response.token && response.user) {
         setUser(response.user);

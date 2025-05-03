@@ -23,7 +23,7 @@ export default function TicketDetailPage() {
 
   // Get ticket ID from URL params
   const { id } = params;
-  console.log("TicketDetailPage - id do params:", id);
+  // console.log("TicketDetailPage - id do params:", id);
 
   if (!id) {
     return (

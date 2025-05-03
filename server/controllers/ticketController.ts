@@ -122,7 +122,7 @@ export const createTicket = async (req: Request, res: Response) => {
           contentType: req.file.mimetype,
           filename: req.file.originalname,
         };
-        console.log('Attachment buffer length:', attachment.data.length, 'Content-Type:', attachment.contentType);
+        // console.log('Attachment buffer length:', attachment.data.length, 'Content-Type:', attachment.contentType);
       } catch (error) {
         console.error('Error processing attachment:', error);
         throw error;
