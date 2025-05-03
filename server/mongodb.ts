@@ -10,8 +10,6 @@ if (!MONGODB_URI) {
 
 // Opções de conexão do MongoDB
 const mongooseOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
   maxPoolSize: 50,
@@ -20,11 +18,29 @@ const mongooseOptions = {
   heartbeatFrequencyMS: 2000,
   retryWrites: true,
   retryReads: true,
-  family: 4
+  family: 4,
+  autoIndex: true, // Criar índices automaticamente
+  autoCreate: true // Criar coleções automaticamente
 };
 
 // Variável para rastrear o estado da conexão
 export let isConnected = false;
+
+// Configurar eventos do Mongoose
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose conectado ao MongoDB');
+  isConnected = true;
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Erro na conexão do Mongoose:', err);
+  isConnected = false;
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose desconectado do MongoDB');
+  isConnected = false;
+});
 
 // Conectar ao MongoDB
 export const connectToDatabase = async () => {
