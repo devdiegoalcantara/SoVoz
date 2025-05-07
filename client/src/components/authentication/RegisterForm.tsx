@@ -24,6 +24,8 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 export default function RegisterForm() {
   const { register } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
@@ -110,11 +112,20 @@ export default function RegisterForm() {
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Crie uma senha" 
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Crie uma senha" 
+                          {...field} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -128,11 +139,20 @@ export default function RegisterForm() {
                   <FormItem>
                     <FormLabel>Confirmar senha</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Confirme a senha" 
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Input 
+                          type={showConfirmPassword ? "text" : "password"} 
+                          placeholder="Confirme a senha" 
+                          {...field} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          <i className={`fas ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

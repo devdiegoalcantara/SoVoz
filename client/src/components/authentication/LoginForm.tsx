@@ -21,6 +21,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export default function LoginForm() {
   const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -89,11 +90,20 @@ export default function LoginForm() {
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Sua senha" 
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Sua senha" 
+                          {...field} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
