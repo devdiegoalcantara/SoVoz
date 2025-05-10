@@ -47,11 +47,10 @@ export default function KanbanBoard() {
       if (!response.ok) {
         throw new Error('Erro ao carregar tickets');
       }
-      const result = await response.json();
-      return { tickets: result.tickets || [] };
+      return response.json();
     },
     staleTime: 30000, // cache por 30s
-    cacheTime: 5 * 60 * 1000, // cache por 5min
+    gcTime: 5 * 60 * 1000, // cache por 5min
   });
 
   // Update ticket status mutation com optimistic update
@@ -90,7 +89,7 @@ export default function KanbanBoard() {
     onSuccess: () => {
       toast({
         title: "Status atualizado",
-        description: "Ticket movido com sucesso.",
+        description: "O status do chamado foi atualizado com sucesso.",
       });
     },
   });

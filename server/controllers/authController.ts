@@ -27,7 +27,7 @@ export const register = async (req: Request, res: Response) => {
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(400).json({ message: 'Já existe um usuário com este email' });
     }
 
     // Hash password
@@ -99,13 +99,13 @@ export const login = async (req: Request, res: Response) => {
     // Check if user exists
     const user = await storage.getUserByEmail(email);
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Credenciais inválidas' });
     }
 
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Credenciais inválidas' });
     }
 
     // Generate JWT token
@@ -116,7 +116,7 @@ export const login = async (req: Request, res: Response) => {
     );
 
     res.json({
-      message: 'Login successful',
+      message: 'Login realizado com sucesso',
       token,
       user: {
         id: user.id,

@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Login error:', error);
       toast({
         title: "Erro de login",
-        description: error.message || "Email ou senha inválidos.",
+        description: error.message || "Email ou senha incorretos. Por favor, tente novamente.",
         variant: "destructive",
       });
       return null;
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Registration error:", error);
       toast({
         title: "Erro no registro",
-        description: error.message || "Não foi possível criar sua conta.",
+        description: error.message || "Não foi possível criar sua conta. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
