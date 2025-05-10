@@ -22,7 +22,7 @@ const ticketFormSchema = z.object({
   type: z.string().min(1, "Selecione um tipo"),
   department: z.string().min(1, "Nome do órgão é obrigatório"),
   submitterName: z.string().optional(),
-  submitterEmail: z.string().email("Email inválido").or(z.literal("")).optional(),
+  submitterEmail: z.string().email("Email inválido").optional().or(z.literal("")),
 });
 
 type TicketFormValues = z.infer<typeof ticketFormSchema>;
@@ -48,13 +48,19 @@ export default function TicketForm() {
 
   const createTicketMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch("/api/tickets", {
+      const isAuthenticated = !!localStorage.getItem('token');
+      const endpoint = isAuthenticated ? "/api/tickets" : "/api/tickets/anonymous";
+      
+      const headers: HeadersInit = {};
+      if (isAuthenticated) {
+        headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`;
+      }
+      
+      const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
         credentials: "include",
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers
       });
       
       if (!response.ok) {

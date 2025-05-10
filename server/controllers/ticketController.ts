@@ -7,6 +7,13 @@ import fs from 'fs';
 import path from 'path';
 import { Types } from 'mongoose';
 
+interface AttachmentType {
+  data: Buffer;
+  contentType: string;
+  filename: string;
+  createdAt: Date;
+}
+
 // Get all tickets with pagination
 export const getAllTickets = async (req: Request, res: Response) => {
   (res as any).header('Cache-Control', 'no-store');
@@ -307,5 +314,64 @@ export const getTicketAttachment = async (req: Request, res: Response) => {
     console.error('Erro em getTicketAttachment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({ message: 'Erro ao recuperar anexo' });
+  }
+};
+
+// Create anonymous ticket
+export const createAnonymousTicket = async (req: Request, res: Response) => {
+  try {
+    let attachments: AttachmentType[] = [];
+    if (req.files && Array.isArray(req.files)) {
+      attachments = (req.files as Express.Multer.File[]).map((file) => ({
+        data: file.buffer,
+        contentType: file.mimetype,
+        filename: file.originalname,
+        createdAt: new Date()
+      }));
+    } else if (req.file) {
+      attachments = [{
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+        filename: req.file.originalname,
+        createdAt: new Date()
+      }];
+    }
+
+    // Get the highest sequential ID
+    const lastTicket = await TicketModel.findOne({}).sort({ sequentialId: -1 }).exec();
+    const nextSequentialId = lastTicket ? Number(lastTicket.sequentialId) + 1 : 1;
+
+    // Validação básica
+    const { title, description, type, department, submitterName, submitterEmail } = req.body;
+
+    if (!title || !description || !type || !department) {
+      return res.status(400).json({ 
+        message: 'Os campos título, descrição, tipo e departamento são obrigatórios' 
+      });
+    }
+
+    const ticketData: InsertTicket = {
+      sequentialId: nextSequentialId,
+      title: req.body.title,
+      description: req.body.description,
+      type: req.body.type,
+      department: req.body.department,
+      status: 'Novo',
+      submitterName: req.body.submitterName || null,
+      submitterEmail: req.body.submitterEmail || null,
+      userId: null, // Chamados anônimos não têm userId
+      attachments: attachments.length > 0 ? attachments : undefined
+    };
+
+    const newTicket = await TicketModel.create(ticketData);
+
+    res.status(201).json({
+      message: 'Ticket anônimo criado com sucesso',
+      ticket: newTicket
+    });
+  } catch (error: unknown) {
+    console.error('Error creating anonymous ticket:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ message: 'Erro ao criar ticket anônimo', error: errorMessage });
   }
 };
