@@ -50,7 +50,7 @@ export default function Header({ title, showSearch = true, onSearch }: HeaderPro
               className="bg-primary hover:bg-primary/90 text-white px-4 py-1 rounded-md text-sm font-medium flex items-center space-x-1 transition"
             >
               <i className="fas fa-plus text-xs"></i>
-              <span>Novo Ticket</span>
+              <span>Novo Chamado</span>
             </Button>
           ) : (
             <Link href="/login">

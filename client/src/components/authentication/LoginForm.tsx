@@ -160,11 +160,11 @@ export default function LoginForm() {
       </div>
       
       <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">Ou envie um ticket sem fazer login</p>
+        <p className="text-sm text-gray-500">Ou envie um chamado sem fazer login</p>
         <Link href="/new-ticket">
-          <a className="mt-2 inline-block font-medium text-primary hover:text-primary/80 text-sm">
-            Enviar ticket anônimo
-          </a>
+          <Button variant="outline" className="w-full">
+            Enviar chamado anônimo
+          </Button>
         </Link>
       </div>
     </div>

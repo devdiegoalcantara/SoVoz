@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: "fas fa-chart-line", adminOnly: true },
-    { href: "/tickets", label: "Tickets", icon: "fas fa-ticket-alt", adminOnly: false },
+    { href: "/tickets", label: "Chamados", icon: "fas fa-ticket-alt", adminOnly: false },
     { href: "/kanban", label: "Kanban", icon: "fas fa-columns", adminOnly: true },
   ];
 
@@ -73,7 +73,7 @@ export default function Sidebar() {
               }`}
             >
               <i className="fas fa-plus w-5 md:w-auto"></i>
-              <span className="hidden md:inline">Novo Ticket</span>
+              <span className="hidden md:inline">Novo Chamado</span>
             </Link>
           </li>
         </ul>

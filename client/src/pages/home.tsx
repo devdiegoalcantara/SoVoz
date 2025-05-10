@@ -38,7 +38,7 @@ export default function Home() {
                 <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
                   <i className="fas fa-comment-dots text-3xl"></i>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Envie um Ticket</h2>
+                <h2 className="text-xl font-semibold mb-2">Envie um Chamado</h2>
                 <p className="text-gray-600">
                   Reporte problemas, envie sugestões ou compartilhe um feedback sobre o sistema SoGov
                 </p>
@@ -78,7 +78,7 @@ export default function Home() {
               
               <div className="mt-6 flex flex-col md:flex-row gap-4 justify-center">
                 <Button onClick={() => setLocation("/new-ticket")} className="flex-1">
-                  Enviar Ticket
+                  Enviar Chamado
                 </Button>
                 <Button onClick={() => setLocation("/login")} variant="outline" className="flex-1">
                   Fazer Login
@@ -103,9 +103,9 @@ export default function Home() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-medium mb-2">Como funciona?</h3>
                   <ol className="list-decimal list-inside text-sm text-gray-600 space-y-2">
-                    <li>Envie um ticket detalhando seu problema ou sugestão</li>
-                    <li>Nossa equipe analisa e categoriza seu ticket</li>
-                    <li>Acompanhe o status do seu ticket</li>
+                    <li>Envie um chamado detalhando seu problema ou sugestão</li>
+                    <li>Nossa equipe analisa e categoriza seu chamado</li>
+                    <li>Acompanhe o status do seu chamado</li>
                     <li>Receba feedbacks sobre a resolução</li>
                   </ol>
                 </div>

@@ -59,7 +59,7 @@ export default function TicketForm() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Error creating ticket");
+        throw new Error(errorData.message || "Erro ao criar chamado");
       }
       
       return response.json();
@@ -67,14 +67,14 @@ export default function TicketForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
       toast({
-        title: "Ticket enviado com sucesso",
-        description: "Seu ticket foi registrado e será analisado em breve.",
+        title: "Chamado enviado com sucesso",
+        description: "Seu chamado foi registrado e será analisado em breve.",
       });
       setLocation("/tickets");
     },
     onError: (error) => {
       toast({
-        title: "Erro ao enviar ticket",
+        title: "Erro ao enviar chamado",
         description: error.message || "Ocorreu um erro. Tente novamente.",
         variant: "destructive",
       });
@@ -202,7 +202,7 @@ export default function TicketForm() {
                   <FormItem>
                     <FormLabel>Título</FormLabel>
                     <FormControl>
-                      <Input placeholder="Título do ticket" {...field} />
+                      <Input placeholder="Título do chamado" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -355,7 +355,7 @@ export default function TicketForm() {
                     <i className="fas fa-spinner fa-spin mr-2"></i>
                     Enviando...
                   </>
-                ) : "Salvar ticket"}
+                ) : "Salvar chamado"}
               </Button>
             </div>
           </form>

@@ -76,13 +76,13 @@ export default function Dashboard() {
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-bold text-text">Estatísticas</h1>
-        <p className="text-gray-500 text-sm">Informações gerais sobre os tickets</p>
+        <p className="text-gray-500 text-sm">Informações gerais sobre os chamados</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <Card>
           <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Total de tickets</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-1">Total de chamados</h3>
             <div className="flex items-end justify-between">
               <p className="text-3xl font-bold text-text">{data.totalTickets}</p>
               <span className="text-green-600 flex items-center text-sm">
@@ -94,7 +94,7 @@ export default function Dashboard() {
         
         <Card>
           <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Tickets resolvidos</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-1">Chamados resolvidos</h3>
             <div className="flex items-end justify-between">
               <p className="text-3xl font-bold text-text">{data.resolvedTickets}</p>
               <span className="text-sm font-medium text-success">{data.resolvedPercentage}%</span>
@@ -107,7 +107,7 @@ export default function Dashboard() {
             <h3 className="text-sm font-medium text-gray-500 mb-1">Taxa de resolução</h3>
             <div className="flex items-end justify-between">
               <p className="text-3xl font-bold text-text">{data.resolvedPercentage}%</p>
-              <span className="text-sm text-gray-500">dos tickets</span>
+              <span className="text-sm text-gray-500">dos chamados</span>
             </div>
           </CardContent>
         </Card>
@@ -116,7 +116,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-4">Tickets por tipo</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-4">Chamados por tipo</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -138,7 +138,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} tickets`, name]} />
+                  <Tooltip formatter={(value, name) => [`${value} chamados`, name]} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -148,7 +148,7 @@ export default function Dashboard() {
         
         <Card>
           <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-4">Tickets por status</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-4">Chamados por status</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -170,7 +170,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} tickets`, name]} />
+                  <Tooltip formatter={(value, name) => [`${value} chamados`, name]} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -195,11 +195,11 @@ export default function Dashboard() {
                     interval={0}
                   />
                   <YAxis allowDecimals={false} />
-                  <Tooltip formatter={(value) => [`${value} tickets`, "Quantidade"]} />
+                  <Tooltip formatter={(value) => [`${value} chamados`, "Quantidade"]} />
                   <Bar 
                     dataKey="count" 
                     fill="#1B4DC2" 
-                    name="Tickets" 
+                    name="Chamados" 
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>

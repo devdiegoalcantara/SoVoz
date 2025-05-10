@@ -36,7 +36,7 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
         }
       });
       if (!response.ok) {
-        throw new Error('Erro ao carregar ticket');
+        throw new Error('Erro ao carregar chamado');
       }
       return response.json();
     }
@@ -52,13 +52,13 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
       toast({
         title: "Status atualizado",
-        description: "O status do ticket foi atualizado com sucesso.",
+        description: "O status do chamado foi atualizado com sucesso.",
       });
     },
     onError: (error) => {
       toast({
         title: "Erro ao atualizar",
-        description: "Não foi possível atualizar o status do ticket.",
+        description: "Não foi possível atualizar o status do chamado.",
         variant: "destructive",
       });
     },
@@ -152,7 +152,7 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
       <div className="flex justify-center p-8">
         <div className="text-center">
           <i className="fas fa-spinner fa-spin text-2xl text-primary mb-4"></i>
-          <p>Carregando informações do ticket...</p>
+          <p>Carregando informações do chamado...</p>
         </div>
       </div>
     );
@@ -164,8 +164,8 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
         <div className="text-error mb-4">
           <i className="fas fa-exclamation-circle text-4xl"></i>
         </div>
-        <h3 className="text-xl font-bold mb-2">Erro ao carregar ticket</h3>
-        <p className="text-gray-600">Não foi possível carregar as informações do ticket.</p>
+        <h3 className="text-xl font-bold mb-2">Erro ao carregar chamado</h3>
+        <p className="text-gray-600">Não foi possível carregar as informações do chamado.</p>
         <Button 
           onClick={handleBack} 
           className="mt-4"
@@ -188,8 +188,8 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
     <div>
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-text">Detalhes do Ticket</h1>
-          <p className="text-gray-500 text-sm">Informações completas sobre o ticket</p>
+          <h1 className="text-xl font-bold text-text">Detalhes do Chamado</h1>
+          <p className="text-gray-500 text-sm">Informações completas sobre o chamado</p>
         </div>
         <Button 
           onClick={handleBack} 
@@ -284,7 +284,7 @@ export default function TicketDetail({ ticketId }: TicketDetailProps) {
                 <div className="bg-gray-50 p-3 rounded-md">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">ID do Ticket</p>
+                      <p className="text-gray-500">ID do Chamado</p>
                       <p className="font-medium text-text">#{ticket.id}</p>
                     </div>
                     <div>

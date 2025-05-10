@@ -138,19 +138,19 @@ export default function TicketTable({ searchQuery }: TicketTableProps) {
   };
 
   if (isLoading) {
-    return <div className="text-center p-4">Carregando tickets...</div>;
+    return <div className="text-center p-4">Carregando chamados...</div>;
   }
 
   if (error) {
-    return <div className="text-center text-error p-4">Erro ao carregar tickets. Tente novamente.</div>;
+    return <div className="text-center text-error p-4">Erro ao carregar chamados. Tente novamente.</div>;
   }
 
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
         <div>
-          <h1 className="text-xl font-bold text-text">Lista de Tickets</h1>
-          <p className="text-gray-500 text-sm">Gerencie os tickets enviados pelos usuários</p>
+          <h1 className="text-xl font-bold text-text">Lista de Chamados</h1>
+          <p className="text-gray-500 text-sm">Gerencie os chamados enviados pelos usuários</p>
         </div>
 
         <div className="flex flex-wrap gap-2">

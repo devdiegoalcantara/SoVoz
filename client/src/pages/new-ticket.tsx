@@ -15,11 +15,11 @@ export default function NewTicketPage() {
     <div className="flex flex-col md:flex-row min-h-screen">
       {isAuthenticated && <Sidebar />}
       <main className="flex-1 flex flex-col transition-all duration-300">
-        <Header title="Novo Ticket" showSearch={false} />
+        <Header title="Novo Chamado" showSearch={false} />
         <div className="container mx-auto p-4 md:p-6 flex-1">
           <div className="mb-6">
-            <h1 className="text-xl font-bold text-text">Novo Ticket</h1>
-            <p className="text-gray-500 text-sm">Criar um novo ticket no sistema</p>
+            <h1 className="text-xl font-bold text-text">Novo Chamado</h1>
+            <p className="text-gray-500 text-sm">Criar um novo chamado no sistema</p>
           </div>
           
           <TicketForm />
