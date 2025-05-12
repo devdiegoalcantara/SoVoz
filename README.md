@@ -74,10 +74,17 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 - Aos colegas e usuários do SoGov pelas sugestões valiosas
 - À comunidade open source pelas ferramentas incríveis
-- Ao Replit por viabilizar o desenvolvimento gratuito
 
 ---
 
 <div align="center">
   <p>Feito com ❤️ por quem acredita no serviço público de qualidade</p>
 </div>
+
+## 🌐 Projeto Online
+
+O projeto completo (Full Stack) está disponível no seguinte link:  
+🔗 [https://sovoz.onrender.com](https://sovoz.onrender.com)
+
+⚠️ **Nota:** O projeto está hospedado em um servidor gratuito (Render).  
+Para economizar recursos, o servidor entra em modo de hibernação quando não está em uso, então pode levar alguns segundos para carregar completamente na primeira vez que for acessado.
