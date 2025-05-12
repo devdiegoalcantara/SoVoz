@@ -1,8 +1,8 @@
-# 🎙️ SoVoz - Plataforma de Comunicação por Voz
+# 📢 SoVoz - Plataforma de Comunicação Cidadã
 
 <div align="center">
   <img src="generated-icon.png" alt="SoVoz Logo" width="200"/>
-  
+
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -11,7 +11,9 @@
 
 ## 🌟 Sobre o Projeto
 
-SoVoz é uma plataforma inovadora de comunicação por voz, desenvolvida para facilitar a interação entre usuários através de mensagens de áudio. O projeto nasceu da necessidade de criar uma experiência mais natural e pessoal de comunicação, combinando a praticidade das mensagens de texto com a riqueza da comunicação verbal.
+**SoVoz** é uma plataforma simples, direta e eficiente para comunicação entre cidadãos, servidores públicos e equipes de desenvolvimento da plataforma **SoGov**. O objetivo é facilitar o envio de **bugs**, **sugestões de melhoria** e **feedbacks**, de forma anônima ou identificada, com possibilidade de anexar imagens ou vídeos. Esses envios são organizados automaticamente em um painel **kanban**, onde administradores podem acompanhar, responder e resolver as demandas. Também é possível visualizar estatísticas para melhorar a gestão e priorização de melhorias.
+
+Como atuo diretamente nas **implantações e suporte do SoGov**, observei de perto as dificuldades que usuários enfrentam para reportar problemas ou sugerir melhorias. Percebendo essa lacuna, desenvolvi o **SoVoz** com a missão de aproximar o público dos desenvolvedores, mostrando que há **alguém ouvindo suas reclamações, elogios ou sugestões**.
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -25,36 +27,21 @@ SoVoz é uma plataforma inovadora de comunicação por voz, desenvolvida para fa
 - **Backend:**
   - Node.js com Express
   - MongoDB para armazenamento de dados
-  - WebSocket para comunicação em tempo real
   - JWT para autenticação
   - Multer para upload de arquivos
 
-## 💡 Desafios e Soluções
-
-### 1. Streaming de Áudio em Tempo Real
-**Desafio:** Implementar streaming de áudio com baixa latência e alta qualidade.
-**Solução:** Utilizamos WebSocket para estabelecer uma conexão bidirecional, permitindo streaming eficiente e minimizando a latência.
-
-### 2. Armazenamento de Arquivos de Áudio
-**Desafio:** Gerenciar eficientemente o armazenamento de arquivos de áudio.
-**Solução:** Implementamos um sistema de armazenamento em nuvem com MongoDB GridFS, permitindo armazenamento escalável e recuperação rápida.
-
-### 3. Interface Responsiva
-**Desafio:** Criar uma interface intuitiva e responsiva para diferentes dispositivos.
-**Solução:** Utilizamos TailwindCSS com componentes Radix UI, garantindo uma experiência consistente em todas as plataformas.
-
 ## 🎯 Como o Projeto Ajuda as Pessoas
 
-- **Acessibilidade:** Facilita a comunicação para pessoas com dificuldades de digitação
-- **Eficiência:** Permite comunicação mais rápida e natural através de mensagens de voz
-- **Praticidade:** Combina a conveniência das mensagens de texto com a riqueza da comunicação verbal
-- **Conectividade:** Promove conexões mais autênticas entre usuários
+- **Acesso facilitado:** Permite que qualquer cidadão ou servidor envie um ticket de forma simples
+- **Transparência:** Os administradores podem responder diretamente e acompanhar o status de cada demanda
+- **Organização:** Tickets organizados em painel Kanban para facilitar o fluxo de resolução
+- **Estatísticas:** Painel de dados para apoio à tomada de decisão
 
 ## 🛠️ Instalação e Uso
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/sovoz.git
+git clone https://github.com/devdiegoalcantara/sovoz.git
 ```
 
 2. Instale as dependências:
@@ -74,24 +61,24 @@ npm run dev
 
 ## 🤝 Contribuindo
 
-Contribuições são sempre bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
 
 ## 📝 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-## 👥 Autores
+## 👥 Autor
 
-- Seu Nome - Desenvolvedor Principal
+- Diego Alcântara - Desenvolvedor e idealizador do projeto
 
 ## 🙏 Agradecimentos
 
-- A todos os contribuidores que ajudaram no desenvolvimento
-- À comunidade open source por fornecer ferramentas incríveis
-- Aos usuários que testaram e forneceram feedback valioso
+- Aos colegas e usuários do SoGov pelas sugestões valiosas
+- À comunidade open source pelas ferramentas incríveis
+- Ao Replit por viabilizar o desenvolvimento gratuito
 
 ---
 
 <div align="center">
-  <p>Feito com ❤️ e muito café ☕</p>
-</div> 
+  <p>Feito com ❤️ por quem acredita no serviço público de qualidade</p>
+</div>
