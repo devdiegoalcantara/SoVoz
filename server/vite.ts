@@ -1,10 +1,12 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
+import { createServer } from "vite";
 import { type Server } from "http";
+import { fileURLToPath } from "url";
 
-const viteLogger = createLogger();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -18,26 +20,25 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const vite = await createViteServer({
+  const vite = await createServer({
+    server: { middlewareMode: true },
+    appType: "custom",
     root: path.resolve(__dirname, "../client"),
     configFile: path.resolve(__dirname, "../client/vite.config.ts"),
-    server: {
-      middlewareMode: true,
-      hmr: { server },
-    },
-    appType: "custom",
   });
 
+  // Servir arquivos estáticos primeiro
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+
   app.use(vite.middlewares);
+  
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
     try {
       const clientTemplate = path.resolve(
         __dirname,
-        "client",
-        "dist",
-        "index.html"
+        "../client/dist/index.html"
       );
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = await vite.transformIndexHtml(url, template);
@@ -48,8 +49,10 @@ export async function setupVite(app: Express, server: Server) {
       next(e);
     }
   });
+
+  return vite;
 }
 
 export function serveStatic(app: Express) {
-  app.use(express.static(path.join(__dirname, "client/dist")));
+  app.use(express.static(path.join(__dirname, "../client/dist")));
 }
