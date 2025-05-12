@@ -21,10 +21,18 @@ export function log(message: string, source = "express") {
 
 export async function setupVite(app: Express, server: Server) {
   const vite = await createServer({
-    server: { middlewareMode: true },
+    server: { 
+      middlewareMode: true,
+      hmr: false
+    },
     appType: "custom",
     root: path.resolve(__dirname, "../client"),
     configFile: path.resolve(__dirname, "../client/vite.config.ts"),
+    logLevel: 'silent', // Silenciando todos os logs do Vite
+    clearScreen: false,
+    optimizeDeps: {
+      disabled: true // Desabilitando otimização de dependências em desenvolvimento
+    }
   });
 
   // Servir arquivos estáticos primeiro

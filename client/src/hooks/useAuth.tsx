@@ -2,6 +2,7 @@ import { createContext, useState, useContext, useEffect, ReactNode } from "react
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { queryClient } from "@/lib/queryClient";
 
 interface User {
   id: number;
@@ -135,6 +136,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
+    // Limpar o cache do React Query
+    queryClient.clear();
     setLocation("/login");
     toast({
       title: "Logout bem-sucedido",
