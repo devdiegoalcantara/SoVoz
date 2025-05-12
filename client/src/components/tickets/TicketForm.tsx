@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 // Ticket form schema
 const ticketFormSchema = z.object({
@@ -33,6 +34,8 @@ export default function TicketForm() {
   const { user } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showAnonymousWarning, setShowAnonymousWarning] = useState(false);
+  const [formDataToSubmit, setFormDataToSubmit] = useState<FormData | null>(null);
   
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -182,6 +185,13 @@ export default function TicketForm() {
       selectedFiles.forEach(file => {
         formData.append("attachments", file);
       });
+
+      // Se o usuário não estiver autenticado, mostrar o aviso
+      if (!user) {
+        setFormDataToSubmit(formData);
+        setShowAnonymousWarning(true);
+        return;
+      }
       
       await createTicketMutation.mutateAsync(formData);
     } catch (error) {
@@ -191,182 +201,233 @@ export default function TicketForm() {
     }
   };
 
+  const handleAnonymousSubmit = async () => {
+    if (formDataToSubmit) {
+      await createTicketMutation.mutateAsync(formDataToSubmit);
+    }
+    setShowAnonymousWarning(false);
+  };
+
+  const handleLoginRedirect = () => {
+    setShowAnonymousWarning(false);
+    setLocation("/login");
+  };
+
   const handleCancel = () => {
     setLocation("/tickets");
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Título do chamado" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+    <>
+      <AlertDialog open={showAnonymousWarning} onOpenChange={setShowAnonymousWarning}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader className="space-y-4">
+            <AlertDialogTitle className="text-2xl font-bold text-center">
+              Atenção: Chamado Anônimo
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base space-y-4">
+              <p className="leading-relaxed">
+                Você está prestes a enviar um chamado anônimo. É importante que você saiba que:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Não será possível acompanhar o status da sua solicitação posteriormente</li>
+                <li>Você não terá acesso ao histórico completo dos seus chamados</li>
+                <li>Não receberá notificações sobre atualizações do seu chamado</li>
+              </ul>
+              <p className="leading-relaxed font-medium">
+                Recomendamos fortemente fazer login para ter uma experiência completa e poder acompanhar suas solicitações.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-3 mt-6">
+            <AlertDialogCancel 
+              onClick={handleLoginRedirect}
+              className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
+            >
+              Fazer Login
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleAnonymousSubmit}
+              className="w-full sm:w-auto bg-gray-200 text-gray-900 hover:bg-gray-300"
+            >
+              Continuar Anonimamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card>
+        <CardContent className="p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Título</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
+                        <Input placeholder="Título do chamado" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Bug">Bug</SelectItem>
-                        <SelectItem value="Sugestão">Sugestão</SelectItem>
-                        <SelectItem value="Feedback">Feedback</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Órgão relacionado</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome do órgão" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="submitterEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail (opcional)</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Seu e-mail" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descreva o problema ou sugestão"
-                      rows={5}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div>
-              <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Anexos</FormLabel>
-              <div 
-                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              >
-                <div className="space-y-1 text-center">
-                  <i className="fas fa-cloud-upload-alt mx-auto h-12 w-12 text-gray-400"></i>
-                  <div className="flex text-sm text-gray-600">
-                    <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
-                      <span>Enviar arquivos</span>
-                      <input
-                        id="file-upload"
-                        name="attachments"
-                        type="file"
-                        className="sr-only"
-                        accept=".jpg,.png,.mp4"
-                        multiple
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                    <p className="pl-1">ou arraste e solte</p>
-                  </div>
-                  <p className="text-xs text-gray-500">JPG, PNG ou MP4 (máx. 20MB no total)</p>
-                  
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                          <div className="flex items-center space-x-2">
-                            <i className={`${
-                              file.type.startsWith('image/') ? "fas fa-image" :
-                              file.type === 'video/mp4' ? "fas fa-video" :
-                              "fas fa-file"
-                            } text-gray-500`}></i>
-                            <span className="text-sm text-gray-700">{file.name}</span>
-                            <span className="text-xs text-gray-500">
-                              ({(file.size / (1024 * 1024)).toFixed(2)} MB)
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <i className="fas fa-times"></i>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Bug">Bug</SelectItem>
+                          <SelectItem value="Sugestão">Sugestão</SelectItem>
+                          <SelectItem value="Feedback">Feedback</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Órgão relacionado</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do órgão" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="submitterEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-mail (opcional)</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Seu e-mail" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descreva o problema ou sugestão"
+                        rows={5}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div>
+                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Anexos</FormLabel>
+                <div 
+                  className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <div className="space-y-1 text-center">
+                    <i className="fas fa-cloud-upload-alt mx-auto h-12 w-12 text-gray-400"></i>
+                    <div className="flex text-sm text-gray-600">
+                      <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
+                        <span>Enviar arquivos</span>
+                        <input
+                          id="file-upload"
+                          name="attachments"
+                          type="file"
+                          className="sr-only"
+                          accept=".jpg,.png,.mp4"
+                          multiple
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                      <p className="pl-1">ou arraste e solte</p>
+                    </div>
+                    <p className="text-xs text-gray-500">JPG, PNG ou MP4 (máx. 20MB no total)</p>
+                    
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div className="flex items-center space-x-2">
+                              <i className={`${
+                                file.type.startsWith('image/') ? "fas fa-image" :
+                                file.type === 'video/mp4' ? "fas fa-video" :
+                                "fas fa-file"
+                              } text-gray-500`}></i>
+                              <span className="text-sm text-gray-700">{file.name}</span>
+                              <span className="text-xs text-gray-500">
+                                ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isUploading || createTicketMutation.isPending}
-              >
-                {(isUploading || createTicketMutation.isPending) ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Enviando...
-                  </>
-                ) : "Salvar chamado"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              
+              <div className="flex justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isUploading || createTicketMutation.isPending}
+                >
+                  {(isUploading || createTicketMutation.isPending) ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Enviando...
+                    </>
+                  ) : "Salvar chamado"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </>
   );
 }
