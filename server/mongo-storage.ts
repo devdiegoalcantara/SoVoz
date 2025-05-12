@@ -10,6 +10,8 @@ export interface User {
   email: string;
   password: string;
   role: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
 }
 
 export interface InsertUser {
@@ -65,7 +67,9 @@ export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
 
   // Ticket operations
   getTicket(id: string): Promise<Ticket | undefined>;
@@ -113,7 +117,9 @@ export class MongoDBStorage implements IStorage {
       name: doc.name,
       email: doc.email,
       password: doc.password,
-      role: doc.role
+      role: doc.role,
+      resetToken: doc.resetToken,
+      resetTokenExpiry: doc.resetTokenExpiry
     };
   }
 
@@ -159,11 +165,33 @@ export class MongoDBStorage implements IStorage {
     }
   }
 
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    try {
+      const user = await UserModel.findOne({ resetToken: token });
+      return user ? this.mapUserDocument(user) : undefined;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async createUser(userData: InsertUser): Promise<User> {
     try {
       const user = new UserModel(userData);
       await user.save();
       return this.mapUserDocument(user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
+    try {
+      const user = await UserModel.findByIdAndUpdate(
+        id,
+        { $set: data },
+        { new: true }
+      );
+      return user ? this.mapUserDocument(user) : undefined;
     } catch (error) {
       throw error;
     }

@@ -131,9 +131,9 @@ export default function LoginForm() {
                   )}
                 />
                 
-                <a href="#" className="text-sm font-medium text-primary hover:text-primary/80">
+                <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80">
                   Esqueceu a senha?
-                </a>
+                </Link>
               </div>
               
               <Button 

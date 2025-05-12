@@ -25,7 +25,12 @@ export const apiRequest = async (
       credentials: 'include'
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = {};
+    }
     // console.log('API Response:', data);
 
     if (!response.ok) {

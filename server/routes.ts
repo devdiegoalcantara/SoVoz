@@ -29,6 +29,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post('/auth/register', authController.register);
   apiRouter.post('/auth/login', authController.login);
   apiRouter.get('/auth/user', verifyToken as any, authController.getCurrentUser);
+  apiRouter.post('/auth/forgot-password', authController.forgotPassword);
+  apiRouter.post('/auth/reset-password', authController.resetPassword);
 
   // Ticket routes
   apiRouter.get('/tickets', verifyToken as any, ticketController.getAllTickets);
